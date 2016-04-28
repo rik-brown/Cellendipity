@@ -1,16 +1,8 @@
 /*
- * 2016.04.21 Moving forward: bkgColor, cellStartSize and colonySize now working OK :-)
+ * 2016.04.28 Continuing to work on implementing controls in dat.gui
  *
  * New bugs:
- * Colour in HSB from dat.gui Colour Selector is not working correctly.
- * Is it possible to pick in HSB (it must be displayed correctly in the picker too)
- * If not, how to pick in RGB but convert to matching HSB? Tricky
- * Remember : when using the heading of a p5 Vector (for hue), the mappings need to match (-PI/+PI) etc.
- * Maybe hue, sat & bright can be passed into the cell as floats instead?
- * 
- * There is also an error-message for an 'Uncaught Error'. Maybe fixed now? Were some of the values returned from dat.gui outside the legal range?
- * But now - picked colours don't seem to change despite the printed values changing,
- * Need to check the code inside 'Cell' class.
+ * Transparency needs fixing inside cell.display()
  *
  * Older bugs:
  * Bug: keyPressed doesn't seem to work any more
@@ -474,10 +466,10 @@ function Cell(pos, dna_, rStart_) {
     //noStroke();
     //noFill();
 
-    stroke(p.cellStrokeColor, p.cellStrokeAlpha);
-    //stroke(red(p.cellStrokeColor), green(p.cellStrokeColor), blue(p.cellStrokeColor), p.cellStrokeAlpha);
-    fill(p.cellFillColor, p.cellFillAlpha);
-    //fill(red(p.cellFillColor), green(p.cellFillColor), blue(p.cellFillColor), p.cellFillAlpha);
+    //stroke(p.cellStrokeColor, p.cellStrokeAlpha);
+    stroke(hue(p.cellStrokeColor), saturation(p.cellStrokeColor), brightness(p.cellStrokeColor), p.cellStrokeAlpha);
+    //fill(p.cellFillColor, p.cellFillAlpha);
+    fill(hue(p.cellFillColor), saturation(p.cellFillColor), brightness(p.cellFillColor), p.cellFillAlpha);
 
     var angle = this.velocity.heading();
     push();
