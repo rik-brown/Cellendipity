@@ -1,0 +1,7 @@
+fill
+#1c3959
+alpha 10
+
+stroke
+#ff7f00
+alpha 10

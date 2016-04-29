@@ -2,7 +2,6 @@
  * 2016.04.28 Continuing to work on implementing controls in dat.gui
  *
  * New bugs:
- * Transparency needs fixing inside cell.display()
  *
  * Older bugs:
  * Bug: keyPressed doesn't seem to work any more
@@ -52,6 +51,9 @@ var cellStrokeAlpha = 100;
 var cellStartSize = 50; // Cell radius at spawn
 var fertileStart = 0.8; // Cell becomes fertile when size has shrunk to this % of startSize
 var wraparound = true; // If true, cells leaving the canvas will wraparound, else rebound from walls
+var spawning = true; // If false, cells will not be run
+var moving = true; // If false, cells will not move
+var growing = true; // If false, cells will not move
 
 
 function setup() {
@@ -177,6 +179,11 @@ var initGUI = function () {
 	    });
 	  var controller = f5.add(p, 'cellStrokeAlpha', 0, 100).name('Cell Stroke Alpha');
 	    controller.onChange(function(value) {populateColony();});
+  var f6 = gui.addFolder("Actions");
+  f6.add(p, 'moving').name('Moving');
+  f6.add(p, 'spawning').name('Spawning');
+  f6.add(p, 'growing').name('Growing');
+
 }
 
 
@@ -193,6 +200,9 @@ var parameters = function () {
   this.cellStartSize = 50; // Cell radius at spawn
   this.fertileStart = 0.8; // Cell becomes fertile when size has shrunk to this % of startSize
   this.wraparound = true; // If true, cells leaving the canvas will wraparound, else rebound from walls
+  this.moving = true;
+  this.spawning = true;
+  this.growing = false;
 }
 
 
@@ -217,15 +227,16 @@ function Colony(num, rStart_) { // Imports 'num' from Setup in main, the number 
     var pos = createVector(random(width), random(height)); // Initial position vector is random
     //var pos = createVector(width/2, height/2);           // Initial position vector is center of canvas
     var dna = new DNA(); // Get new DNA
-    this.cells.push(new Cell(pos, dna, p.cellStartSize)); // Add new Cell with DNA
+    this.cells.push(new Cell(pos, p.cellFillColor, p.cellStrokeColor, dna, p.cellStartSize)); // Add new Cell with DNA
   }
 
   this.spawn = function(mousePos, rStart_) {
     // Spawn a new cell (called by e.g. MousePressed in main, accepting mouse coords for start position)
     var dna = new DNA();
     var rStart = rStart_;
-    this.cells.push(new Cell(mousePos, dna, rStart));
+    this.cells.push(new Cell(mousePos, p.cellFillColor, p.cellStrokeColor, dna, rStart));
   };
+
 
   // Run the colony
   this.run = function() {
@@ -283,9 +294,13 @@ function Colony(num, rStart_) { // Imports 'num' from Setup in main, the number 
 /* ------------------------------------------------------------------------------------------------------------- */
 
 // cell Class
-function Cell(pos, dna_, rStart_) {
+function Cell(pos, cellFillColor_, cellStrokeColor_, dna_, rStart_) {
+
+var fillColVector = createVector(); 
+var strokeColVector = createVector(); 
 
   //  Objects
+  
   this.dna = dna_;
 
   // DNA gene mapping (14 genes)
@@ -330,13 +345,18 @@ function Cell(pos, dna_, rStart_) {
   this.m = this.r * 0.1; // Mass (sort of)
 
   // FILL COLOR
-  // is now given by the global p.cellFillColor
+  this.cellFillColor = cellFillColor_;
+  //println(this.cellFillColor);
+  //println(hue(this.cellFillColor));
+  //println(radians(hue(this.cellFillColor)));
+  this.fillColVector = p5.Vector.fromAngle(radians(hue(this.cellFillColor)));
 
   //this.fill_Alpha = map(this.dna.genes[8], 0, 1, 0, 255);
   this.fill_Alpha = 10;
 
   //STROKE COLOR
-  // is now given by the global p.cellFillColor
+  this.cellStrokeColor = cellStrokeColor_;
+  this.strokeColVector = p5.Vector.fromAngle(radians(hue(this.cellStrokeColor)));
 
   //this.stroke_Alpha = map(this.dna.genes[12], 0, 1, 0, 255);
   this.stroke_Alpha = 10; // (previous values: 18, 45)
@@ -353,9 +373,9 @@ function Cell(pos, dna_, rStart_) {
   this.run = function() {
     //this.moveLinear();
     //this.moveLinearStepped();
-    this.movePerlin();
+    if (p.moving) {this.movePerlin();}
     //this.movePerlinStepped();
-    this.grow();
+    if (p.growing) {this.grow();}
     if (p.wraparound) {this.checkBoundaryWraparound();} else {this.checkBoundaryRebound();}
     this.display();
     //this.cellDebuggerText();    // FOR DEBUG ONLY. Uses 'Text' on canvas.
@@ -467,9 +487,9 @@ function Cell(pos, dna_, rStart_) {
     //noFill();
 
     //stroke(p.cellStrokeColor, p.cellStrokeAlpha);
-    stroke(hue(p.cellStrokeColor), saturation(p.cellStrokeColor), brightness(p.cellStrokeColor), p.cellStrokeAlpha);
+    stroke(hue(this.cellStrokeColor), saturation(this.cellStrokeColor), brightness(this.cellStrokeColor), p.cellStrokeAlpha);
     //fill(p.cellFillColor, p.cellFillAlpha);
-    fill(hue(p.cellFillColor), saturation(p.cellFillColor), brightness(p.cellFillColor), p.cellFillAlpha);
+    fill(hue(this.cellFillColor), saturation(this.cellFillColor), brightness(this.cellFillColor), p.cellFillAlpha);
 
     var angle = this.velocity.heading();
     push();
@@ -524,12 +544,22 @@ function Cell(pos, dna_, rStart_) {
           this.spawnVel.add(other.velocity); // Add dad's velocity
           this.spawnVel.normalize(); // Normalize to leave just the direction and magnitude of 1 (will be multiplied later)
 
-          // Calculate rStart for child;
+          // Calculate new fill colour for child
+          this.childFillColVector = this.fillColVector.add(other.fillColVector);
+          this.childFillColVector.normalize(); 
+          
+          // Calculate new stroke colour for child
+          this.childStrokeColVector = this.strokeColVector.add(other.strokeColVector);
+          this.childStrokeColVector.normalize(); 
+              
+          
+          
+          // Calculate rStart for child
           this.rStart = this.r;
 
           // Call spawn method (in Colony) with the new parameters for position, velocity and fill-colour)
           //colony.spawn(spawnPos.x, spawnPos.y, spawnVel.x, spawnVel.y, spawnCol.heading(), spawnCol.mag());
-          colony.spawn(this.spawnPos, this.rStart);
+          if (p.spawning) {colony.spawn(this.spawnPos, this.rStart);}
 
           //Reset fertility counter
           //this.fertility = 0;
