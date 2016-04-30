@@ -1,32 +1,5 @@
 /*
- * 2016.04.28 Continuing to work on implementing controls in dat.gui
  *
- * TO DO:
- * Perlin and linear movement should be two vectors which can be multed by a slider value & added together
- * New bugs:
- *
- * Older bugs:
- * Bug: keyPressed doesn't seem to work any more
- *
- *
- * More ideas...
- * GUI is a thing you have to user-test & develop intuitively
- * Just get some elements up & running, see how it feels
- * Which controls feel useful, which ones are in the way?
- * Do you really need micro-control of all colours?
- * Maybe it's sufficient to select Hue & Alpha (with sliders), since the others are modulated by other functions anyway
- *
- * Some ideas:
- * Toggle for trails/refresh
- * Toggle for 'autorespawn' (alternative is to stop when all cells dies)
- *
- * How does the thing look & feel when you meet it? Do you need to get 'involved' in the GUI, or can you just as happily let it run on 'auto-randomiser'
- *
- * Can consider using 'constrain' if for example setting "Max number of cells" in colony then this constrains selected starting number of cells
- *
- * Some variants tend towards continuous respawning (increasing population), some tend towards extinction. Very few are in between.
- * 
- * HMMM, wonder how it would be if you could set things in a 'pause' state, fill the canvas with coloured seeds, then set it running....
  */
 
 var sketchContainer = "sketch";
@@ -122,13 +95,6 @@ function keyPressed() {
   }
   if (key == 'd') {
     colony.cullAll();
-  }
-  if (key == 'b') {
-    background(0);
-  }
-  if (key == 'f') {
-    var fs = fullscreen();
-    fullscreen(!fs);
   }
 }
 
