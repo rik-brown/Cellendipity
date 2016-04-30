@@ -1,17 +1,13 @@
 /*
  * 2016.04.28 Continuing to work on implementing controls in dat.gui
  *
+ * TO DO:
+ * Perlin and linear movement should be two vectors which can be multed by a slider value & added together
  * New bugs:
  *
  * Older bugs:
  * Bug: keyPressed doesn't seem to work any more
- * Missing feature: How do I get fullscreen mode to work?
  *
- * If I can't make the colour-selecter work, I have to make the best of it
- * I'd prefer to stick with HSB
- * If I'm going to allow full colour-tuning, I need sliders for HSBa for Fill and Stroke and HSB for background, plus GreyScale/Color toggles
- * Alternatively: stick to RGB and try using https://p5js.org/reference/#/p5/lerpColor
- * Put each one in seperate folders
  *
  * More ideas...
  * GUI is a thing you have to user-test & develop intuitively
@@ -50,34 +46,33 @@ var cellStrokeColor = [30, 100, 100]; // Cell fill colour
 var cellStrokeAlpha = 100;
 var cellStartSize = 50; // Cell radius at spawn
 var fertileStart = 0.8; // Cell becomes fertile when size has shrunk to this % of startSize
+var trails = true; // If false, background will refresh on every draw cycle
+var veils = false; // If true, a transparent rect will be drawn on every draw cycle
 var wraparound = true; // If true, cells leaving the canvas will wraparound, else rebound from walls
 var spawning = true; // If false, cells will not be run
 var moving = true; // If false, cells will not move
-var growing = true; // If false, cells will not move
+var growing = true; // If false, cells will not grow
 
 
 function setup() {
   p = new parameters();
   gui = new dat.GUI();
   initGUI();
-  var rStart = random(10, 100); // Starting radius
-
-  createCanvas(windowWidth, windowHeight - 4);
+  
+  createCanvas(windowHeight, windowHeight - 4);
 
   //frameRate(5); // Useful for debugging
 
   colorMode(HSB, 360, 100, 100, 100);
   smooth();
   ellipseMode(RADIUS);
-
-  background(p.bkgColor); // For greyscale background
+  background(p.bkgColor);
   colony = new Colony(p.colonySize, p.cellStartSize);
-  //populateColony(); //Creates a colony with initial population of cells
 }
 
 function draw() {
-  //background(p.bkgColor);
-  //veil();             // To lay a transparent 'veil' over the background every frame
+  if (!p.trails) {background(p.bkgColor);}
+  if (p.veils) {veil();} // Draws a near-transparent 'veil' in background colour over the  frame
   colony.run();
   if (colony.cells.length === 0) {
     // Repopulate the colony if it suffers an extinction
@@ -89,15 +84,14 @@ function draw() {
 }
 
 function populateColony() {
-  var rStart = random(10, 50);
   colony = new Colony(p.colonySize, p.cellStartSize); //Could Colony receive a color-seed value (that is iterated through in a for- loop?) (or randomized?)
  // colony = new Colony(10, rStart); // Populate the colony with a single cell. Useful for debugging
 }
 
 function veil() {
-  var transparency = 3; // 255 is fully opaque, 1 is virtually invisible
+  var transparency = 1; // 255 is fully opaque, 1 is virtually invisible
   noStroke();
-  fill(p.bkgColor, transparency);
+  fill(hue(p.bkgColor), saturation(p.bkgColor), brightness(p.bkgColor), transparency);
   rect(-1, -1, width + 1, height + 1);
 }
 
@@ -107,7 +101,7 @@ function mousePressed() {
   //println("mousePos: " + mousePos);
   //println("cellFillColor: " + p.cellFillColor + "   cellFillAlpha: " + p.cellFillAlpha);
   //println("cellStrokeColor: " + p.cellStrokeColor + "   cellStrokeAlpha: " + p.cellStrokeAlpha);
-  colony.spawn(mousePos, p.cellStartSize);
+  colony.spawn(mousePos, p.cellFillColor, p.cellStrokeColor, p.cellStartSize);
 }
 
 function mouseDragged() {
@@ -115,7 +109,7 @@ function mouseDragged() {
   //println("mousePos: " + mousePos);
   //println("cellFillColor: " + p.cellFillColor + "   cellFillAlpha: " + p.cellFillAlpha);
   //println("cellStrokeColor: " + p.cellStrokeColor + "   cellStrokeAlpha: " + p.cellStrokeAlpha);
-  colony.spawn(mousePos, p.cellStartSize);
+  colony.spawn(mousePos, p.cellFillColor, p.cellStrokeColor, p.cellStartSize);
 }
 
 function screendump() {
@@ -156,9 +150,11 @@ var initGUI = function () {
 	    });
 	  var controller = f1.add(p, 'fertileStart', 0.5, 0.9).step(0.01).name('Fertile radius%');
 	    controller.onChange(function(value) {background(p.bkgColor);});
-	var f2 = gui.addFolder("Environment");
+	var f2 = gui.addFolder('Environment');
 	  var controller = f2.add(p, 'wraparound').name('Wraparound');
 	    controller.onChange(function(value) {background(p.bkgColor);});
+	  f2.add(p, 'trails').name('Trails');
+	  f2.add(p, 'veils').name('Veils');
 	var f3 = gui.addFolder('Background');
 	  var controller = f3.addColor(p, 'bkgColHSV').name('Background Colour');
 	    controller.onChange(function(value) {
@@ -200,6 +196,8 @@ var parameters = function () {
   this.cellStartSize = 50; // Cell radius at spawn
   this.fertileStart = 0.8; // Cell becomes fertile when size has shrunk to this % of startSize
   this.wraparound = true; // If true, cells leaving the canvas will wraparound, else rebound from walls
+  this.trails = true;
+  this.veils = false;
   this.moving = true;
   this.spawning = true;
   this.growing = false;
@@ -230,11 +228,13 @@ function Colony(num, rStart_) { // Imports 'num' from Setup in main, the number 
     this.cells.push(new Cell(pos, p.cellFillColor, p.cellStrokeColor, dna, p.cellStartSize)); // Add new Cell with DNA
   }
 
-  this.spawn = function(mousePos, rStart_) {
+  this.spawn = function(mousePos, cellFillColor_, cellStrokeColor_, cellStartSize_) {
     // Spawn a new cell (called by e.g. MousePressed in main, accepting mouse coords for start position)
     var dna = new DNA();
-    var rStart = rStart_;
-    this.cells.push(new Cell(mousePos, p.cellFillColor, p.cellStrokeColor, dna, rStart));
+    var cellStartSize = cellStartSize_;
+    var cellFillColor = cellFillColor_;
+    var cellStrokeColor = cellStrokeColor_;
+    this.cells.push(new Cell(mousePos, cellFillColor, cellStrokeColor, dna, cellStartSize));
   };
 
 
@@ -266,7 +266,7 @@ function Colony(num, rStart_) { // Imports 'num' from Setup in main, the number 
 
     // If there are too many cells, remove some by 'culling' (not actually active now, functional code is commented out)
     if (this.cells.length > colonyMax) {
-      this.cull(50);
+      this.cull(100);
     }
   };
 
@@ -546,11 +546,13 @@ var strokeColVector = createVector();
 
           // Calculate new fill colour for child
           this.childFillColVector = this.fillColVector.add(other.fillColVector);
-          this.childFillColVector.normalize(); 
+          this.childFillColVector.normalize();
+          this.childFillColor = [this.childFillColVector.heading(), 100, 100];
           
           // Calculate new stroke colour for child
           this.childStrokeColVector = this.strokeColVector.add(other.strokeColVector);
-          this.childStrokeColVector.normalize(); 
+          this.childStrokeColVector.normalize();
+          this.childStrokeColor = [this.childStrokeColVector.heading(), 100, 100];
               
           
           
@@ -559,7 +561,9 @@ var strokeColVector = createVector();
 
           // Call spawn method (in Colony) with the new parameters for position, velocity and fill-colour)
           //colony.spawn(spawnPos.x, spawnPos.y, spawnVel.x, spawnVel.y, spawnCol.heading(), spawnCol.mag());
-          if (p.spawning) {colony.spawn(this.spawnPos, this.rStart);}
+          if (p.spawning) {
+            println("trying to spawn a child");
+            colony.spawn(this.spawnPos, this.childFillColor, this.childStrokeColor, this.rStart);}
 
           //Reset fertility counter
           //this.fertility = 0;
