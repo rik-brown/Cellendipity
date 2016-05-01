@@ -1,6 +1,8 @@
 /*
- * 2016.05.01 11:00
+ * 2016.05.01 17:38
  * Working on Issue#5, trying to fix spawncolour
+ * Tested using controlled spawn with 'r' 'g' & 'b' kes
+ * Spawn-color works fine from these :-)
  * 
  */
 
@@ -94,11 +96,32 @@ function screendump() {
   saveCanvas('test', 'png');
 }
 
-function keyPressed() {
-  if (key == 's') {
-    screendump();
+function keyTyped() {
+  if (key === 'b') {
+    var spawnPos = createVector(width/2, height/2);
+    var testFillColor = [240, 100, 100];
+    var testStrokeColor = [0, 0, 100];
+    colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
+    //screendump();
   }
-  if (key == 'd') {
+  
+  if (key === 'g') {
+    var spawnPos = createVector(width/2, height/2);
+    var testFillColor = [120, 100, 100];
+    var testStrokeColor = [0, 0, 100];
+    colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
+    //screendump();
+  }
+  
+  if (key === 'r') {
+    var spawnPos = createVector(width/2, height/2);
+    var testFillColor = [0, 100, 100];
+    var testStrokeColor = [0, 0, 100];
+    colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
+    //screendump();
+  }
+  
+  if (key === 'c') {
     colony.cullAll();
   }
 }
