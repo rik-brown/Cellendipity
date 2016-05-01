@@ -12,11 +12,11 @@ var col; // PVector col needs to be declared to allow for random picker
 var colonySize = 20; // Max number of cells in the colony
 var bkgColHSV = { h: 0, s: 0.1, v: 0.1 };
 var bkgColor = [0, 10, 10]; // Background colour
-var cellFillColHSV = { h: 120, s: 1, v: 1 };
-var cellFillColor = [120, 1, 1]; // Cell fill colour
+var cellFillColHSV = { h: 210, s: 0.67, v: 0.34 };
+var cellFillColor = [210, 67, 34]; // Cell fill colour
 var cellFillAlpha = 100;
-var cellStrokeColHSV = { h: 30, s: 1, v: 1 };
-var cellStrokeColor = [30, 100, 100]; // Cell fill colour
+var cellStrokeColHSV = { h: 29, s: 0.99, v: 0.99 };
+var cellStrokeColor = [29, 99, 99]; // Cell fill colour
 var cellStrokeAlpha = 100;
 var cellStartSize = 50; // Cell radius at spawn
 var fertileStart = 0.8; // Cell becomes fertile when size has shrunk to this % of startSize
@@ -48,7 +48,7 @@ function setup() {
 }
 
 function draw() {
-  if (!p.trails) {background(p.bkgColor);}
+  if (!p.trails || p.debugCellText) {background(p.bkgColor);}
   if (p.veils) {veil();} // Draws a near-transparent 'veil' in background colour over the  frame
   colony.run();
   if (colony.cells.length === 0) {
@@ -161,11 +161,11 @@ var parameters = function () {
   this.colonySize = 3; // Max number of cells in the colony
   this.bkgColHSV = { h: 0, s: 0.1, v: 0.1 };
   this.bkgColor = [0, 10, 10]; // Background colour
-  this.cellFillColHSV = { h: 120, s: 1, v: 1 };
-  this.cellFillColor = [120, 100, 100]; // Cell colour
+  this.cellFillColHSV = { h: 210, s: 0.67, v: 0.34 };
+  this.cellFillColor = [210, 67, 34]; // Cell colour
   this.cellFillAlpha = 10;
-  this.cellStrokeColHSV = { h: 30, s: 1, v: 1 };
-  this.cellStrokeColor = [30, 100, 100]; // Cell colour
+  this.cellStrokeColHSV = { h: 29, s: 0.99, v: 0.99 };
+  this.cellStrokeColor = [29, 99, 99]; // Cell colour
   this.cellStrokeAlpha = 10;
   this.cellStartSize = 20; // Cell radius at spawn
   this.fertileStart = 0.6; // Cell becomes fertile when size has shrunk to this % of startSize
@@ -262,7 +262,9 @@ function Colony(num, rStart_) { // Imports 'num' from Setup in main, the number 
   };
 
   this.debugTextColony = function() { // For debug only
-    stroke(360, 100);
+    fill(0);
+    rect(0,0,300,20);
+    fill(360, 100);
     textSize(16);
     text("Nr. cells: " + this.cells.length + " MinLimit:" + colonyMin + " MaxLimit:" + colonyMax, 10, 20);
   };
@@ -609,17 +611,15 @@ var strokeColVector = createVector();
   };
 
   this.cellDebuggerText = function() {
-    stroke(0);
-    fill(0);
-    textSize(12);
-    text("Cells alive:" + colony.cells.length, 0, 10);
+    fill(255);
     textSize(10);
+    text("Your debug text HERE", this.position.x, this.position.y);
     //text("r:" + this.r, this.position.x, this.position.y);
     //text("rStart:" + this.rStart, this.position.x, this.position.y + 10);
-    text("fill_HR:" + this.fill_HR, this.position.x, this.position.y);
-    text("fill_SG:" + this.fill_SG, this.position.x, this.position.y + 10);
-    text("fill_BB:" + this.fill_BB, this.position.x, this.position.y + 20);
-    text("fill_Al:" + this.fill_Alpha, this.position.x, this.position.y + 30);
+    //text("fill_HR:" + this.fill_HR, this.position.x, this.position.y);
+    //text("fill_SG:" + this.fill_SG, this.position.x, this.position.y + 10);
+    //text("fill_BB:" + this.fill_BB, this.position.x, this.position.y + 20);
+    //text("fill_Al:" + this.fill_Alpha, this.position.x, this.position.y + 30);
     //text("rMax:" + this.rMax, this.position.x, this.position.y+10);
     //text("growth:" + this.growth, this.position.x, this.position.y+20);
     //text("age:" + this.age, this.position.x, this.position.y + 20);
@@ -634,8 +634,9 @@ var strokeColVector = createVector();
   };
 
   this.cellDebuggerPrintln = function() {
-    println("cell.debugger/" + "position.x" + this.position.x + "position.y" + this.position.y);
-    println("cell.debugger/" + "radius" + this.r);
+    println("Cell debug in terminal ON")
+    //println("cell.debugger/" + "position.x" + this.position.x + "position.y" + this.position.y);
+    //println("cell.debugger/" + "radius" + this.r);
   };
 }
 
