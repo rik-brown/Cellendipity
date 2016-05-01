@@ -1,5 +1,6 @@
 /*
- * 2016.05.01 08:31
+ * 2016.05.01 11:00
+ * Working on Issue#5, trying to fix spawncolour
  * 
  */
 
@@ -194,7 +195,7 @@ function Colony(num, rStart_) { // Imports 'num' from Setup in main, the number 
   // VARIABLES
 
   var colonyMin = 10;
-  var colonyMax = 200;
+  var colonyMax = 20;
   var colRand = random(-PI, PI);
   
   // Create initial population of cells  
@@ -211,6 +212,7 @@ function Colony(num, rStart_) { // Imports 'num' from Setup in main, the number 
     var cellStartSize = cellStartSize_;
     var cellFillColor = cellFillColor_;
     var cellStrokeColor = cellStrokeColor_;
+    if (p.debugCellPrintln) {println("About to spawn with cellFillColor= " + hue(cellFillColor));}
     this.cells.push(new Cell(mousePos, cellFillColor, cellStrokeColor, dna, cellStartSize));
   };
 
@@ -325,9 +327,11 @@ var strokeColVector = createVector();
 
   // FILL COLOR
   this.cellFillColor = cellFillColor_;
-  //println(this.cellFillColor);
-  //println(hue(this.cellFillColor));
-  //println(radians(hue(this.cellFillColor)));
+  if (p.debugCellPrintln) {
+    println(this.cellFillColor);
+    println(hue(this.cellFillColor));
+    println(radians(hue(this.cellFillColor)));
+  }
   this.fillColVector = p5.Vector.fromAngle(radians(hue(this.cellFillColor)));
 
   //this.fill_Alpha = map(this.dna.genes[8], 0, 1, 0, 255);
@@ -526,12 +530,12 @@ var strokeColVector = createVector();
           // Calculate new fill colour for child
           this.childFillColVector = this.fillColVector.add(other.fillColVector);
           this.childFillColVector.normalize();
-          this.childFillColor = [this.childFillColVector.heading(), 100, 100];
+          this.childFillColor = [degrees(this.childFillColVector.heading()), 100, 100];
           
           // Calculate new stroke colour for child
           this.childStrokeColVector = this.strokeColVector.add(other.strokeColVector);
           this.childStrokeColVector.normalize();
-          this.childStrokeColor = [this.childStrokeColVector.heading(), 100, 100];
+          this.childStrokeColor = [degrees(this.childStrokeColVector.heading()), 100, 100];
               
           
           
@@ -541,7 +545,7 @@ var strokeColVector = createVector();
           // Call spawn method (in Colony) with the new parameters for position, velocity and fill-colour)
           //colony.spawn(spawnPos.x, spawnPos.y, spawnVel.x, spawnVel.y, spawnCol.heading(), spawnCol.mag());
           if (p.spawning) {
-            println("trying to spawn a child");
+            if (p.debugCellPrintln) {println("trying to spawn a child"); }
             colony.spawn(this.spawnPos, this.childFillColor, this.childStrokeColor, this.rStart);}
 
           //Reset fertility counter
@@ -634,7 +638,7 @@ var strokeColVector = createVector();
   };
 
   this.cellDebuggerPrintln = function() {
-    println("Cell debug in terminal ON")
+    //println("Cell debug in terminal ON")
     //println("cell.debugger/" + "position.x" + this.position.x + "position.y" + this.position.y);
     //println("cell.debugger/" + "radius" + this.r);
   };
