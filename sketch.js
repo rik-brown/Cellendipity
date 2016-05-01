@@ -1,5 +1,6 @@
 /*
- *
+ * 2016.05.01 08:31
+ * 
  */
 
 var sketchContainer = "sketch";
@@ -25,6 +26,9 @@ var wraparound = true; // If true, cells leaving the canvas will wraparound, els
 var spawning = true; // If false, cells will not be run
 var moving = true; // If false, cells will not move
 var growing = true; // If false, cells will not grow
+var debugCellText = false; // If true, debug functions for Cell class are enabled (using Text)
+var debugCellPrintln = false; // If true, debug functions for Cell class are enabled (using Println)
+var debugColony = false; // If true, debug functions for Colony class are enabled
 
 
 function setup() {
@@ -108,7 +112,7 @@ var initGUI = function () {
 	      colony.cullAll();
 	      populateColony();
 	    });
-	  var controller = f1.add(p, 'cellStartSize', 10, 100).step(1).name('Cell start size');
+	  var controller = f1.add(p, 'cellStartSize', 10, 200).step(1).name('Cell start size');
 	    controller.onChange(function(value) {
 	      background(p.bkgColor);
 	      colony.cullAll();
@@ -142,15 +146,19 @@ var initGUI = function () {
 	  var controller = f5.add(p, 'cellStrokeAlpha', 0, 100).name('Cell Stroke Alpha');
 	    controller.onChange(function(value) {populateColony();});
   var f6 = gui.addFolder("Actions");
-  f6.add(p, 'moving').name('Moving');
-  f6.add(p, 'spawning').name('Spawning');
-  f6.add(p, 'growing').name('Growing');
+    f6.add(p, 'moving').name('Moving');
+    f6.add(p, 'spawning').name('Spawning');
+    f6.add(p, 'growing').name('Growing');
+  var f7 = gui.addFolder("Debug");
+    f7.add(p, 'debugCellText').name('Debug:Cell(text)');
+    f7.add(p, 'debugCellPrintln').name('Debug:Cell(terminal)');
+    f7.add(p, 'debugColony').name('Debug:Colony');
 
 }
 
 
 var parameters = function () {
-  this.colonySize = 10; // Max number of cells in the colony
+  this.colonySize = 3; // Max number of cells in the colony
   this.bkgColHSV = { h: 0, s: 0.1, v: 0.1 };
   this.bkgColor = [0, 10, 10]; // Background colour
   this.cellFillColHSV = { h: 120, s: 1, v: 1 };
@@ -159,14 +167,17 @@ var parameters = function () {
   this.cellStrokeColHSV = { h: 30, s: 1, v: 1 };
   this.cellStrokeColor = [30, 100, 100]; // Cell colour
   this.cellStrokeAlpha = 10;
-  this.cellStartSize = 50; // Cell radius at spawn
-  this.fertileStart = 0.8; // Cell becomes fertile when size has shrunk to this % of startSize
+  this.cellStartSize = 20; // Cell radius at spawn
+  this.fertileStart = 0.6; // Cell becomes fertile when size has shrunk to this % of startSize
   this.wraparound = true; // If true, cells leaving the canvas will wraparound, else rebound from walls
   this.trails = true;
   this.veils = false;
   this.moving = true;
   this.spawning = true;
   this.growing = false;
+  this.debugCellText = false;
+  this.debugCellPrintln = false;
+  this.debugColony = false;
 }
 
 
@@ -207,7 +218,7 @@ function Colony(num, rStart_) { // Imports 'num' from Setup in main, the number 
   // Run the colony
   this.run = function() {
 
-    //debugTextColony();  // Debug only
+    if (p.debugColony) {this.debugTextColony(); }
 
     // Iterate backwards through the ArrayList because we are removing items
     for (var i = this.cells.length - 1; i >= 0; i--) {
@@ -253,7 +264,7 @@ function Colony(num, rStart_) { // Imports 'num' from Setup in main, the number 
   this.debugTextColony = function() { // For debug only
     stroke(360, 100);
     textSize(16);
-    text("Nr. cells: " + cells.length + " MinLimit:" + colonyMin + " MaxLimit:" + colonyMax, 10, 20);
+    text("Nr. cells: " + this.cells.length + " MinLimit:" + colonyMin + " MaxLimit:" + colonyMax, 10, 20);
   };
 }
 
@@ -344,8 +355,8 @@ var strokeColVector = createVector();
     if (p.growing) {this.grow();}
     if (p.wraparound) {this.checkBoundaryWraparound();} else {this.checkBoundaryRebound();}
     this.display();
-    //this.cellDebuggerText();    // FOR DEBUG ONLY. Uses 'Text' on canvas.
-    //this.cellDebuggerPrintln(); // FOR DEBUG ONLY. Uses console.
+    if (p.debugCellText) {this.cellDebuggerText(); }
+    if (p.debugCellPrintln) {this.cellDebuggerPrintln(); }
   };
 
   this.grow = function() {
