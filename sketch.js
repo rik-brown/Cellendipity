@@ -29,6 +29,7 @@ var wraparound = true; // If true, cells leaving the canvas will wraparound, els
 var spawning = true; // If false, cells will not be run
 var moving = true; // If false, cells will not move
 var growing = true; // If false, cells will not grow
+var debugMain = false; // If true, debug functions for main draw() loop are enabled (using Print)
 var debugCellText = false; // If true, debug functions for Cell class are enabled (using Text)
 var debugCellPrintln = false; // If true, debug functions for Cell class are enabled (using Println)
 var debugColony = false; // If true, debug functions for Colony class are enabled
@@ -78,18 +79,26 @@ function veil() {
 // We can add a creature manually if we so desire
 function mousePressed() {
   var mousePos = createVector(mouseX, mouseY);
-  //println("mousePos: " + mousePos);
-  //println("cellFillColor: " + p.cellFillColor + "   cellFillAlpha: " + p.cellFillAlpha);
-  //println("cellStrokeColor: " + p.cellStrokeColor + "   cellStrokeAlpha: " + p.cellStrokeAlpha);
-  colony.spawn(mousePos, p.cellFillColor, p.cellStrokeColor, p.cellStartSize);
+  if (mousePos.x < width) {
+    if (p.debugMain) {print("xx " + String(mousePos));}
+    if (p.debugMain) {print("yy " + String(p.cellFillColor));}
+    if (p.debugMain) {print("zz " + String(p.cellStrokeColor));}
+    //println("cellFillColor: " + p.cellFillColor + "   cellFillAlpha: " + p.cellFillAlpha);
+    //println("cellStrokeColor: " + p.cellStrokeColor + "   cellStrokeAlpha: " + p.cellStrokeAlpha);
+    colony.spawn(mousePos, p.cellFillColor, p.cellStrokeColor, p.cellStartSize);
+  }
 }
 
 function mouseDragged() {
   var mousePos = createVector(mouseX, mouseY);
-  //println("mousePos: " + mousePos);
-  //println("cellFillColor: " + p.cellFillColor + "   cellFillAlpha: " + p.cellFillAlpha);
-  //println("cellStrokeColor: " + p.cellStrokeColor + "   cellStrokeAlpha: " + p.cellStrokeAlpha);
-  colony.spawn(mousePos, p.cellFillColor, p.cellStrokeColor, p.cellStartSize);
+  if (mousePos.x < width) {
+    if (p.debugMain) {print("xx " + String(mousePos));}
+    if (p.debugMain) {print("yy " + String(p.cellFillColor));}
+    if (p.debugMain) {print("zz " + String(p.cellStrokeColor));}
+    //println("cellFillColor: " + p.cellFillColor + "   cellFillAlpha: " + p.cellFillAlpha);
+    //println("cellStrokeColor: " + p.cellStrokeColor + "   cellStrokeAlpha: " + p.cellStrokeAlpha);
+    colony.spawn(mousePos, p.cellFillColor, p.cellStrokeColor, p.cellStartSize);
+  }
 }
 
 function screendump() {
@@ -101,6 +110,7 @@ function keyTyped() {
     var spawnPos = createVector(width/2, height/2);
     var testFillColor = [240, 100, 100];
     var testStrokeColor = [0, 0, 100];
+    if (p.debugMain) {print(String(testFillColor));}
     colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
     //screendump();
   }
@@ -109,6 +119,7 @@ function keyTyped() {
     var spawnPos = createVector(width/2, height/2);
     var testFillColor = [120, 100, 100];
     var testStrokeColor = [0, 0, 100];
+    if (p.debugMain) {print(String(testFillColor));}
     colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
     //screendump();
   }
@@ -117,6 +128,7 @@ function keyTyped() {
     var spawnPos = createVector(width/2, height/2);
     var testFillColor = [0, 100, 100];
     var testStrokeColor = [0, 0, 100];
+    if (p.debugMain) {print(String(testFillColor));}
     colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
     //screendump();
   }
@@ -174,8 +186,9 @@ var initGUI = function () {
     f6.add(p, 'spawning').name('Spawning');
     f6.add(p, 'growing').name('Growing');
   var f7 = gui.addFolder("Debug");
-    f7.add(p, 'debugCellText').name('Debug:Cell(text)');
-    f7.add(p, 'debugCellPrintln').name('Debug:Cell(terminal)');
+    f7.add(p, 'debugMain').name('Debug:Main');
+    f7.add(p, 'debugCellText').name('Debug:Cell(txt)');
+    f7.add(p, 'debugCellPrintln').name('Debug:Cell(print)');
     f7.add(p, 'debugColony').name('Debug:Colony');
 
 }
@@ -199,6 +212,7 @@ var parameters = function () {
   this.moving = true;
   this.spawning = true;
   this.growing = false;
+  this.debugMain = false; 
   this.debugCellText = false;
   this.debugCellPrintln = false;
   this.debugColony = false;
@@ -218,7 +232,7 @@ function Colony(num, rStart_) { // Imports 'num' from Setup in main, the number 
   // VARIABLES
 
   var colonyMin = 10;
-  var colonyMax = 20;
+  var colonyMax = 200;
   var colRand = random(-PI, PI);
   
   // Create initial population of cells  
@@ -235,7 +249,10 @@ function Colony(num, rStart_) { // Imports 'num' from Setup in main, the number 
     var cellStartSize = cellStartSize_;
     var cellFillColor = cellFillColor_;
     var cellStrokeColor = cellStrokeColor_;
-    if (p.debugCellPrintln) {println("About to spawn with cellFillColor= " + hue(cellFillColor));}
+    if (p.debugCellPrintln) {
+      println("01 About to spawn with hue(cellFillColor)= " + hue(cellFillColor));
+      print("02 String(cellFillColor)= " + String(cellFillColor));
+    }
     this.cells.push(new Cell(mousePos, cellFillColor, cellStrokeColor, dna, cellStartSize));
   };
 
@@ -350,13 +367,14 @@ var strokeColVector = createVector();
 
   // FILL COLOR
   this.cellFillColor = cellFillColor_;
-  if (p.debugCellPrintln) {
-    println(this.cellFillColor);
-    println(hue(this.cellFillColor));
-    println(radians(hue(this.cellFillColor)));
-  }
   this.fillColVector = p5.Vector.fromAngle(radians(hue(this.cellFillColor)));
-
+  if (p.debugCellPrintln) {
+    println("03 (in cell) this.cellFillColor= " + this.cellFillColor);
+    println("04 (in cell) hue(this.cellFillColor)= " + hue(this.cellFillColor));
+    println("05 radians(hue(this.cellFillColor)))= " + radians(hue(this.cellFillColor)));
+    println("06 this.fillColVector= " + String(this.fillColVector));
+  }
+  
   //this.fill_Alpha = map(this.dna.genes[8], 0, 1, 0, 255);
   this.fill_Alpha = 10;
 
@@ -550,15 +568,25 @@ var strokeColVector = createVector();
           this.spawnVel.add(other.velocity); // Add dad's velocity
           this.spawnVel.normalize(); // Normalize to leave just the direction and magnitude of 1 (will be multiplied later)
 
-          // Calculate new fill colour for child
+          // Calculate new colour for child
+          if (p.debugCellPrintln) {print("spawncolor 1) this.fillColVector= " + String(this.fillColVector));}
+          if (p.debugCellPrintln) {print("spawncolor 2) other.fillColVector= " + String(this.fillColVector));}
           this.childFillColVector = this.fillColVector.add(other.fillColVector);
+          if (p.debugCellPrintln) {print("spawncolor 3) this.childFillColVector= " + String(this.childFillColVector));}
           this.childFillColVector.normalize();
-          this.childFillColor = [degrees(this.childFillColVector.heading()), 100, 100];
+          if (p.debugCellPrintln) {print("spawncolor 4) this.childFillColVector(normed)= " + String(this.childFillColVector));}
+          if (p.debugCellPrintln) {print("spawncolor 4a) this.childFillColVector HEADING= " + this.childFillColVector.heading());}
+          if (p.debugCellPrintln) {print("spawncolor 4b) this.childFillColVector HEADING DEGREES= " + degrees(this.childFillColVector.heading()));}
+          this.childFillColor =  [map(this.childFillColVector.heading(), -PI, PI, 0, 360), 100, 100];
+          
+          //this.childFillColor = [degrees(this.childFillColVector.heading()), 100, 100];
+          if (p.debugCellPrintln) {print("spawncolor 5) this.childFillColor= " + this.childFillColor);}
           
           // Calculate new stroke colour for child
           this.childStrokeColVector = this.strokeColVector.add(other.strokeColVector);
           this.childStrokeColVector.normalize();
-          this.childStrokeColor = [degrees(this.childStrokeColVector.heading()), 100, 100];
+          this.childStrokeColor =  [map(this.childStrokeColVector.heading(), -PI, PI, 0, 360), 100, 100];
+          //this.childStrokeColor = [degrees(this.childStrokeColVector.heading()), 100, 100];
               
           
           
@@ -568,7 +596,7 @@ var strokeColVector = createVector();
           // Call spawn method (in Colony) with the new parameters for position, velocity and fill-colour)
           //colony.spawn(spawnPos.x, spawnPos.y, spawnVel.x, spawnVel.y, spawnCol.heading(), spawnCol.mag());
           if (p.spawning) {
-            if (p.debugCellPrintln) {println("trying to spawn a child"); }
+            if (p.debugCellPrintln) {println("06 trying to spawn a child"); }
             colony.spawn(this.spawnPos, this.childFillColor, this.childStrokeColor, this.rStart);}
 
           //Reset fertility counter
