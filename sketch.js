@@ -1,8 +1,12 @@
 /*
- * 2016.05.01 17:38
+ * 2016.05.02 22:51
  * Working on Issue#5, trying to fix spawncolour
- * Tested using controlled spawn with 'r' 'g' & 'b' kes
- * Spawn-color works fine from these :-)
+ * Something is working now
+ * but the new colour seems not to be the middle value of the two parents
+ * Added a feature to wait for keypress before repopulating the colony
+ * Added gui element to adjust cellEndSize
+ * Added gui element to adjust growth (cell growth rate)
+ * Spawned colours are still wierd :-|
  * 
  */
 
@@ -12,27 +16,29 @@ var guiContainer = "sketch-gui";
 var colony; // A colony object
 var col; // PVector col needs to be declared to allow for random picker
 
-var colonySize = 20; // Max number of cells in the colony
-var bkgColHSV = { h: 0, s: 0.1, v: 0.1 };
-var bkgColor = [0, 10, 10]; // Background colour
-var cellFillColHSV = { h: 210, s: 0.67, v: 0.34 };
-var cellFillColor = [210, 67, 34]; // Cell fill colour
-var cellFillAlpha = 100;
-var cellStrokeColHSV = { h: 29, s: 0.99, v: 0.99 };
-var cellStrokeColor = [29, 99, 99]; // Cell fill colour
-var cellStrokeAlpha = 100;
-var cellStartSize = 50; // Cell radius at spawn
-var fertileStart = 0.8; // Cell becomes fertile when size has shrunk to this % of startSize
-var trails = true; // If false, background will refresh on every draw cycle
-var veils = false; // If true, a transparent rect will be drawn on every draw cycle
-var wraparound = true; // If true, cells leaving the canvas will wraparound, else rebound from walls
-var spawning = true; // If false, cells will not be run
-var moving = true; // If false, cells will not move
-var growing = true; // If false, cells will not grow
-var debugMain = false; // If true, debug functions for main draw() loop are enabled (using Print)
-var debugCellText = false; // If true, debug functions for Cell class are enabled (using Text)
-var debugCellPrintln = false; // If true, debug functions for Cell class are enabled (using Println)
-var debugColony = false; // If true, debug functions for Colony class are enabled
+var colonySize; // Max number of cells in the colony
+var bkgColHSV;
+var bkgColor; // Backgr0und colour
+var cellFillColHSV;
+var cellFillColorcellEndSize; // Cell fill colour
+var cellFillAlpha;
+var cellStrokeColHSV;
+var cellStrokeColor; // Cell fill colour
+var cellStrokeAlpha;
+var cellStartSize; // Cell radius at spawn
+var cellEndSize; // Cell radius at 'death by size limit'
+var growth; // Growth rate for cell
+var fertileStart; // Cell becomes fertile when size has shrunk to this % of startSize
+var trails; // If false, background will refresh on every draw cycle
+var veils; // If true, a transparent rect will be drawn on every draw cycle
+var wraparound; // If true, cells leaving the canvas will wraparound, else rebound from walls
+var spawning; // If false, cells will not be run
+var moving; // If false, cells will not move
+var growing; // If false, cells will not grow
+var debugMain; // If true, debug functions for main draw() loop are enabled (using Print)
+var debugCellText; // If true, debug functions for Cell class are enabled (using Text)
+var debugCellPrintln; // If true, debug functions for Cell class are enabled (using Println)
+var debugColony; // If true, debug functions for Colony class are enabled
 
 
 function setup() {
@@ -40,7 +46,7 @@ function setup() {
   gui = new dat.GUI();
   initGUI();
   
-  createCanvas(windowHeight, windowHeight - 4);
+  createCanvas(windowHeight*1.5, windowHeight - 4);
 
   //frameRate(5); // Useful for debugging
 
@@ -55,7 +61,7 @@ function draw() {
   if (!p.trails || p.debugCellText) {background(p.bkgColor);}
   if (p.veils) {veil();} // Draws a near-transparent 'veil' in background colour over the  frame
   colony.run();
-  if (colony.cells.length === 0) {
+  if (colony.cells.length === 0 && keyIsPressed) {
     // Repopulate the colony if it suffers an extinction
     //screendump(); //WARNING! Need to stop after doing this once!
     //veil();                       // Draw a veil over the previous colony to gradually fade it into oblivion
@@ -154,6 +160,13 @@ var initGUI = function () {
 	      colony.cullAll();
 	      populateColony();
 	    });
+    var controller = f1.add(p, 'cellEndSize', 1, 50).step(1).name('Cell end size');
+	    controller.onChange(function(value) {
+	      background(p.bkgColor);
+	      colony.cullAll();
+	      populateColony();
+	    });
+	  f1.add(p, 'growth', 0, 1).step(0.01).name('Growth rate');
 	  var controller = f1.add(p, 'fertileStart', 0.5, 0.9).step(0.01).name('Fertile radius%');
 	    controller.onChange(function(value) {background(p.bkgColor);});
 	var f2 = gui.addFolder('Environment');
@@ -196,15 +209,17 @@ var initGUI = function () {
 
 var parameters = function () {
   this.colonySize = 3; // Max number of cells in the colony
-  this.bkgColHSV = { h: 0, s: 0.1, v: 0.1 };
-  this.bkgColor = [0, 10, 10]; // Background colour
-  this.cellFillColHSV = { h: 210, s: 0.67, v: 0.34 };
-  this.cellFillColor = [210, 67, 34]; // Cell colour
+  this.bkgColHSV = { h: 0, s: 0, v: 100 };
+  this.bkgColor = [0, 0, 100]; // Background colour
+  this.cellFillColHSV = { h: 0, s: 1, v: 1 };
+  this.cellFillColor = [0, 100, 100]; // Cell colour
   this.cellFillAlpha = 10;
-  this.cellStrokeColHSV = { h: 29, s: 0.99, v: 0.99 };
-  this.cellStrokeColor = [29, 99, 99]; // Cell colour
+  this.cellStrokeColHSV = { h: 180, s: 1, v: 1 };
+  this.cellStrokeColor = [180, 100, 100]; // Cell colour
   this.cellStrokeAlpha = 10;
-  this.cellStartSize = 20; // Cell radius at spawn
+  this.cellStartSize = 50; // Cell radius at spawn
+  this.cellEndSize = 5;
+  this.growth = 0.01;
   this.fertileStart = 0.6; // Cell becomes fertile when size has shrunk to this % of startSize
   this.wraparound = true; // If true, cells leaving the canvas will wraparound, else rebound from walls
   this.trails = true;
@@ -346,7 +361,7 @@ var strokeColVector = createVector();
 
   // Variables for SIZE & GROWTH  
   this.rStart = rStart_; // Starting radius
-  this.rMin = 1; // Minimum radius
+  this.rMin = p.cellEndSize; // Minimum radius
   //this.rMin = map(this.dna.genes[0], 0, 1, 1, this.rStart/3);
   this.rMaxMax = 10; // Maximum possible value for maximum radius
   this.rMax = this.rMin + map(this.dna.genes[1], 0, 1, 3, this.rMaxMax); // Maximum radius
@@ -410,7 +425,8 @@ var strokeColVector = createVector();
     this.age += 1;
     this.fertility += 1;
     //this.health -= 1;
-    this.r -= this.growth;
+    //this.r -= this.growth;
+    this.r -= p.growth;
     //if (this.r >= this.rMax) { this.growth *= -1; }
     this.drawStep--;
     //if (this.drawStep < 0) {this.drawStep = r*2; }
@@ -426,7 +442,8 @@ var strokeColVector = createVector();
 
   this.moveLinearStepped = function() {
     this.velocity.normalize(); // Convert to a unit-vector (magnitude = 1)
-    this.velocity.mult(this.r + this.r + this.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
+    //this.velocity.mult(this.r + this.r + this.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
+    this.velocity.mult(this.r + this.r + p.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
     this.position.add(this.velocity);
   };
 
@@ -448,7 +465,8 @@ var strokeColVector = createVector();
     this.xoff += this.step;
     this.yoff += this.step;
     velocity.normalize(); // Convert to a unit-vector (magnitude = 1)
-    velocity.mult(this.r + this.r + this.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
+    //velocity.mult(this.r + this.r + this.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
+    velocity.mult(this.r + this.r + p.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
     this.position.add(velocity);
   };
 
@@ -577,7 +595,8 @@ var strokeColVector = createVector();
           if (p.debugCellPrintln) {print("spawncolor 4) this.childFillColVector(normed)= " + String(this.childFillColVector));}
           if (p.debugCellPrintln) {print("spawncolor 4a) this.childFillColVector HEADING= " + this.childFillColVector.heading());}
           if (p.debugCellPrintln) {print("spawncolor 4b) this.childFillColVector HEADING DEGREES= " + degrees(this.childFillColVector.heading()));}
-          this.childFillColor =  [map(this.childFillColVector.heading(), -PI, PI, 0, 360), 100, 100];
+          this.childFillTemp = map(this.childFillColVector.heading(), -PI, PI, 0, 360);
+          this.childFillColor =  [this.childFillTemp-180, 100, 100];
           
           //this.childFillColor = [degrees(this.childFillColVector.heading()), 100, 100];
           if (p.debugCellPrintln) {print("spawncolor 5) this.childFillColor= " + this.childFillColor);}
@@ -585,7 +604,8 @@ var strokeColVector = createVector();
           // Calculate new stroke colour for child
           this.childStrokeColVector = this.strokeColVector.add(other.strokeColVector);
           this.childStrokeColVector.normalize();
-          this.childStrokeColor =  [map(this.childStrokeColVector.heading(), -PI, PI, 0, 360), 100, 100];
+          this.childStrokeTemp = map(this.childStrokeColVector.heading(), -PI, PI, 0, 360);
+          this.childStrokeColor =  [this.childStrokeTemp-180, 100, 100];
           //this.childStrokeColor = [degrees(this.childStrokeColVector.heading()), 100, 100];
               
           
