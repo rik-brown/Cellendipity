@@ -1,5 +1,8 @@
 /*
- * 2016.05.04 05:41
+ * 2016.05.04 16:53 Added debug line which indicates heading of Color Vector
+ * 2016.05.06 08:50 SpawnCol is 180 degrees offset from expected value
+ *                  - added a 'rotate PI' which seems to help
+ *                  - But WHY is it needed?
  */
 
 var sketchContainer = "sketch";
@@ -208,8 +211,8 @@ var initGUI = function () {
 
 var parameters = function () {
   this.colonySize = 3; // Max number of cells in the colony
-  this.bkgColHSV = { h: 0, s: 0, v: 0 };
-  this.bkgColor = [0, 0, 0]; // Background colour
+  this.bkgColHSV = { h: 0, s: 0, v: 1 };
+  this.bkgColor = [0, 0, 100]; // Background colour
   this.cellFillColHSV = { h: 0, s: 1, v: 1 };
   this.cellFillColor = [0, 100, 100]; // Cell colour
   this.cellFillAlpha = 100;
@@ -218,10 +221,10 @@ var parameters = function () {
   this.cellStrokeAlpha = 0;
   this.cellStartSize = 150; // Cell radius at spawn
   this.cellEndSize = 2;
-  this.growth = 0.05;
-  this.fertileStart = 0.8; // Cell becomes fertile when size has shrunk to this % of startSize
+  this.growth = 0.08;
+  this.fertileStart = 0.9; // Cell becomes fertile when size has shrunk to this % of startSize
   this.wraparound = true; // If true, cells leaving the canvas will wraparound, else rebound from walls
-  this.trails = true;
+  this.trails = false;
   this.veils = false;
   this.moving = true;
   this.perlin = false;
@@ -400,6 +403,7 @@ var strokeColVector = createVector();
   // FILL COLOR
   this.cellFillColor = cellFillColor_;
   this.fillColVector = p5.Vector.fromAngle(radians(hue(this.cellFillColor)));
+  this.fillColVector.mult(this.r);
   if (p.debugCellPrintln) {
     println("03 (in cell) this.cellFillColor= " + this.cellFillColor);
     println("04 (in cell) hue(this.cellFillColor)= " + hue(this.cellFillColor));
@@ -560,8 +564,11 @@ var strokeColVector = createVector();
     var angle = this.velocity.heading();
     push();
     translate(this.position.x, this.position.y);
-    rotate(angle);
+    //rotate(angle);
     ellipse(0, 0, this.r, this.r * this.flatness);
+    stroke(0);
+    strokeWeight(3);
+    line (0,0,this.fillColVector.x, this.fillColVector.y);
     if (this.fertile) {fill(0); ellipse(0, 0, p.cellEndSize, p.cellEndSize);} else {fill(255); ellipse(0, 0, p.cellEndSize, p.cellEndSize);}
     /*if (this.drawStep < 1) {
       fill(0, 80);
@@ -671,6 +678,7 @@ var strokeColVector = createVector();
     this.childFillColVector = this.fillColVector.add(other.fillColVector);
     if (p.debugCellPrintln) {print("spawncolor 3) this.childFillColVector= " + String(this.childFillColVector));}
     this.childFillColVector.normalize();
+    this.childFillColVector.rotate(PI);
     if (p.debugCellPrintln) {print("spawncolor 4) this.childFillColVector(normed)= " + String(this.childFillColVector));}
     if (p.debugCellPrintln) {print("spawncolor 4a) this.childFillColVector HEADING= " + this.childFillColVector.heading());}
     if (p.debugCellPrintln) {print("spawncolor 4b) this.childFillColVector HEADING DEGREES= " + degrees(this.childFillColVector.heading()));}
@@ -684,6 +692,7 @@ var strokeColVector = createVector();
     // Calculate new stroke colour for child
     this.childStrokeColVector = this.strokeColVector.add(other.strokeColVector);
     this.childStrokeColVector.normalize();
+    this.childStrokeColVector.rotate(PI);
     this.childStrokeTemp = map(this.childStrokeColVector.heading(), -PI, PI, 0, 360);
     this.childStrokeColor =  [this.childStrokeTemp, 100, 100];
     //this.childStrokeColor =  [this.childStrokeTemp-180, 100, 100];
