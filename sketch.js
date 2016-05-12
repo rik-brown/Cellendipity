@@ -1,6 +1,7 @@
 /*
- * 2016.05.01 08:31
- * 
+ * 2016.05.12 06:43
+ * Replaced color-vectors with simple lerpColor function
+ * Spawn color is a 50/50 lerp between both parents
  */
 
 var sketchContainer = "sketch";
@@ -9,38 +10,35 @@ var guiContainer = "sketch-gui";
 var colony; // A colony object
 var col; // PVector col needs to be declared to allow for random picker
 
-var colonySize = 20; // Max number of cells in the colony
-var bkgColHSV = { h: 0, s: 0.1, v: 0.1 };
-var bkgColor = [0, 10, 10]; // Background colour
-var cellFillColHSV = { h: 210, s: 0.67, v: 0.34 };
-var cellFillColor = [210, 67, 34]; // Cell fill colour
-var cellFillAlpha = 100;
-var cellStrokeColHSV = { h: 29, s: 0.99, v: 0.99 };
-var cellStrokeColor = [29, 99, 99]; // Cell fill colour
-var cellStrokeAlpha = 100;
-var cellStartSize = 50; // Cell radius at spawn
-var fertileStart = 0.8; // Cell becomes fertile when size has shrunk to this % of startSize
-var trails = true; // If false, background will refresh on every draw cycle
-var veils = false; // If true, a transparent rect will be drawn on every draw cycle
-var wraparound = true; // If true, cells leaving the canvas will wraparound, else rebound from walls
-var spawning = true; // If false, cells will not be run
-var moving = true; // If false, cells will not move
-var growing = true; // If false, cells will not grow
-var debugCellText = false; // If true, debug functions for Cell class are enabled (using Text)
-var debugCellPrintln = false; // If true, debug functions for Cell class are enabled (using Println)
-var debugColony = false; // If true, debug functions for Colony class are enabled
+var colonySize; // Max number of cells in the colony
+var cellEndSize; // Cell fill colour
+var cellStartSize; // Cell radius at spawn
+var cellEndSize; // Cell radius at 'death by size limit'
+var growth; // Growth rate for cell
+var fertileStart; // Cell becomes fertile when size has shrunk to this % of startSize
+var trails; // If false, background will refresh on every draw cycle
+var veils; // If true, a transparent rect will be drawn on every draw cycle
+var wraparound; // If true, cells leaving the canvas will wraparound, else rebound from walls
+var spawning; // If false, cells will not be run
+var moving; // If false, cells will not move
+var perlin; // Gives non-linear movement
+var growing; // If false, cells will not grow
+var debugMain; // If true, debug functions for main draw() loop are enabled (using Print)
+var debugCellText; // If true, debug functions for Cell class are enabled (using Text)
+var debugCellPrintln; // If true, debug functions for Cell class are enabled (using Println)
+var debugColony; // If true, debug functions for Colony class are enabled
 
 
 function setup() {
+  colorMode(HSB, 360, 100, 100, 100);
   p = new parameters();
   gui = new dat.GUI();
   initGUI();
   
-  createCanvas(windowHeight, windowHeight - 4);
+  createCanvas(windowWidth, windowHeight - 4);
 
-  //frameRate(5); // Useful for debugging
+  //frameRate(10); // Useful for debugging
 
-  colorMode(HSB, 360, 100, 100, 100);
   smooth();
   ellipseMode(RADIUS);
   background(p.bkgColor);
@@ -51,7 +49,7 @@ function draw() {
   if (!p.trails || p.debugCellText) {background(p.bkgColor);}
   if (p.veils) {veil();} // Draws a near-transparent 'veil' in background colour over the  frame
   colony.run();
-  if (colony.cells.length === 0) {
+  if (colony.cells.length === 0 && keyIsPressed) {
     // Repopulate the colony if it suffers an extinction
     //screendump(); //WARNING! Need to stop after doing this once!
     //veil();                       // Draw a veil over the previous colony to gradually fade it into oblivion
@@ -75,31 +73,68 @@ function veil() {
 // We can add a creature manually if we so desire
 function mousePressed() {
   var mousePos = createVector(mouseX, mouseY);
-  //println("mousePos: " + mousePos);
-  //println("cellFillColor: " + p.cellFillColor + "   cellFillAlpha: " + p.cellFillAlpha);
-  //println("cellStrokeColor: " + p.cellStrokeColor + "   cellStrokeAlpha: " + p.cellStrokeAlpha);
-  colony.spawn(mousePos, p.cellFillColor, p.cellStrokeColor, p.cellStartSize);
+  if (mousePos.x < width) {
+    if (p.debugMain) {print("xx " + String(mousePos));}
+    if (p.debugMain) {print("yy " + String(p.cellFillColor));}
+    if (p.debugMain) {print("zz " + String(p.cellStrokeColor));}
+    //println("cellFillColor: " + p.cellFillColor + "   cellFillAlpha: " + p.cellFillAlpha);
+    //println("cellStrokeColor: " + p.cellStrokeColor + "   cellStrokeAlpha: " + p.cellStrokeAlpha);
+    colony.spawn(mousePos, p.cellFillColor, p.cellStrokeColor, p.cellStartSize);
+  }
 }
 
 function mouseDragged() {
   var mousePos = createVector(mouseX, mouseY);
-  //println("mousePos: " + mousePos);
-  //println("cellFillColor: " + p.cellFillColor + "   cellFillAlpha: " + p.cellFillAlpha);
-  //println("cellStrokeColor: " + p.cellStrokeColor + "   cellStrokeAlpha: " + p.cellStrokeAlpha);
-  colony.spawn(mousePos, p.cellFillColor, p.cellStrokeColor, p.cellStartSize);
+  if (mousePos.x < width) {
+    if (p.debugMain) {print("xx " + String(mousePos));}
+    if (p.debugMain) {print("yy " + String(p.cellFillColor));}
+    if (p.debugMain) {print("zz " + String(p.cellStrokeColor));}
+    //println("cellFillColor: " + p.cellFillColor + "   cellFillAlpha: " + p.cellFillAlpha);
+    //println("cellStrokeColor: " + p.cellStrokeColor + "   cellStrokeAlpha: " + p.cellStrokeAlpha);
+    colony.spawn(mousePos, p.cellFillColor, p.cellStrokeColor, p.cellStartSize);
+  }
 }
 
 function screendump() {
   saveCanvas('test', 'png');
 }
 
-function keyPressed() {
-  if (key == 's') {
-    screendump();
+function keyTyped() {
+  if (key === 'b') {
+    var spawnPos = createVector(random(width), random(height));
+    var testFillColor = color(240, 100, 100);
+    var testStrokeColor = color(0, 0, 100);
+    if (p.debugMain) {print(String(testFillColor));}
+    colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
+    //screendump();
   }
-  if (key == 'd') {
+  
+  if (key === 'g') {
+    var spawnPos = createVector(random(width), random(height));
+    var testFillColor = color(120, 100, 100);
+    var testStrokeColor = color(0, 0, 100);
+    if (p.debugMain) {print(String(testFillColor));}
+    colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
+    //screendump();
+  }
+  
+  if (key === 'r') {
+    var spawnPos = createVector(random(width), random(height));
+    var testFillColor = color(0, 100, 100);
+    var testStrokeColor = color(0, 0, 100);
+    if (p.debugMain) {print(String(testFillColor));}
+    colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
+    //screendump();
+  }
+  
+  if (key === 'c') {
     colony.cullAll();
   }
+  
+  if (key === 'd') {
+    p.debugCellText = !p.debugCellText;
+  }
+  
 }
 
 var initGUI = function () {
@@ -118,6 +153,13 @@ var initGUI = function () {
 	      colony.cullAll();
 	      populateColony();
 	    });
+    var controller = f1.add(p, 'cellEndSize', 1, 50).step(1).name('Cell end size');
+	    controller.onChange(function(value) {
+	      background(p.bkgColor);
+	      colony.cullAll();
+	      populateColony();
+	    });
+	  f1.add(p, 'growth', 0, 1).step(0.01).name('Growth rate');
 	  var controller = f1.add(p, 'fertileStart', 0.5, 0.9).step(0.01).name('Fertile radius%');
 	    controller.onChange(function(value) {background(p.bkgColor);});
 	var f2 = gui.addFolder('Environment');
@@ -128,53 +170,59 @@ var initGUI = function () {
 	var f3 = gui.addFolder('Background');
 	  var controller = f3.addColor(p, 'bkgColHSV').name('Background Colour');
 	    controller.onChange(function(value) {
-	      p.bkgColor = [value.h, value.s*100, value.v*100];
+	      p.bkgColor = color(value.h, value.s*100, value.v*100);
 	      background(p.bkgColor);
 	    });
 	var f4 = gui.addFolder("Cell Fill");
 	  var controller = f4.addColor(p, 'cellFillColHSV').name('Cell Fill Colour');
 	    controller.onChange(function(value) {
-	      p.cellFillColor = [value.h, value.s*100, value.v*100];
+	      p.cellFillColor = color(value.h, value.s*100, value.v*100);
 	    });
 	  var controller = f4.add(p, 'cellFillAlpha', 0, 100).name('Cell Fill Alpha');
 	    controller.onChange(function(value) {populateColony();});
 	var f5 = gui.addFolder("Cell Stroke");
 	  var controller = f5.addColor(p, 'cellStrokeColHSV').name('Cell Stroke Colour');
 	    controller.onChange(function(value) {
-	      p.cellStrokeColor = [value.h, value.s*100, value.v*100];
+	      p.cellStrokeColor = color(value.h, value.s*100, value.v*100);
 	    });
 	  var controller = f5.add(p, 'cellStrokeAlpha', 0, 100).name('Cell Stroke Alpha');
 	    controller.onChange(function(value) {populateColony();});
   var f6 = gui.addFolder("Actions");
     f6.add(p, 'moving').name('Moving');
+    f6.add(p, 'perlin').name('Perlin');
     f6.add(p, 'spawning').name('Spawning');
     f6.add(p, 'growing').name('Growing');
   var f7 = gui.addFolder("Debug");
-    f7.add(p, 'debugCellText').name('Debug:Cell(text)');
-    f7.add(p, 'debugCellPrintln').name('Debug:Cell(terminal)');
+    f7.add(p, 'debugMain').name('Debug:Main');
+    f7.add(p, 'debugCellText').name('Debug:Cell(txt)');
+    f7.add(p, 'debugCellPrintln').name('Debug:Cell(print)');
     f7.add(p, 'debugColony').name('Debug:Colony');
 
 }
 
 
 var parameters = function () {
-  this.colonySize = 3; // Max number of cells in the colony
-  this.bkgColHSV = { h: 0, s: 0.1, v: 0.1 };
-  this.bkgColor = [0, 10, 10]; // Background colour
-  this.cellFillColHSV = { h: 210, s: 0.67, v: 0.34 };
-  this.cellFillColor = [210, 67, 34]; // Cell colour
-  this.cellFillAlpha = 10;
-  this.cellStrokeColHSV = { h: 29, s: 0.99, v: 0.99 };
-  this.cellStrokeColor = [29, 99, 99]; // Cell colour
-  this.cellStrokeAlpha = 10;
-  this.cellStartSize = 20; // Cell radius at spawn
-  this.fertileStart = 0.6; // Cell becomes fertile when size has shrunk to this % of startSize
+  this.colonySize = 80; // Max number of cells in the colony
+  this.bkgColHSV = { h: 0, s: 0, v: 0 };
+  this.bkgColor = color(0, 0, 0); // Background colour
+  this.cellFillColHSV = { h: 0, s: 1, v: 1 };
+  this.cellFillColor = color(0, 100, 100); // Cell colour
+  this.cellFillAlpha = 100;
+  this.cellStrokeColHSV = { h: 180, s: 1, v: 1 };
+  this.cellStrokeColor = color(180, 100, 100); // Cell colour
+  this.cellStrokeAlpha = 6;
+  this.cellStartSize = 100; // Cell radius at spawn
+  this.cellEndSize = 1;
+  this.growth = 0.04;
+  this.fertileStart = 0.9; // Cell becomes fertile when size has shrunk to this % of startSize
   this.wraparound = true; // If true, cells leaving the canvas will wraparound, else rebound from walls
   this.trails = true;
   this.veils = false;
   this.moving = true;
+  this.perlin = true;
   this.spawning = true;
-  this.growing = false;
+  this.growing = true;
+  this.debugMain = false; 
   this.debugCellText = false;
   this.debugCellPrintln = false;
   this.debugColony = false;
@@ -211,6 +259,10 @@ function Colony(num, rStart_) { // Imports 'num' from Setup in main, the number 
     var cellStartSize = cellStartSize_;
     var cellFillColor = cellFillColor_;
     var cellStrokeColor = cellStrokeColor_;
+    if (p.debugCellPrintln) {
+      println("01 About to spawn with hue(cellFillColor)= " + hue(cellFillColor));
+      print("02 String(cellFillColor)= " + String(cellFillColor));
+    }
     this.cells.push(new Cell(mousePos, cellFillColor, cellStrokeColor, dna, cellStartSize));
   };
 
@@ -275,9 +327,6 @@ function Colony(num, rStart_) { // Imports 'num' from Setup in main, the number 
 // cell Class
 function Cell(pos, cellFillColor_, cellStrokeColor_, dna_, rStart_) {
 
-var fillColVector = createVector(); 
-var strokeColVector = createVector(); 
-
   //  Objects
   
   this.dna = dna_;
@@ -298,80 +347,104 @@ var strokeColVector = createVector();
   // 12 = stroke_Alpha
   // 13 = flatness
 
-  // Variable common to all types of MOVEMENT
-  this.position = pos.copy(); //cell has position
-  this.velocity = p5.Vector.random2D(); //cell has velocity
+  // BOOLEAN
+  this.fertile = false; // A new cell always starts of infertile
+  /* e.g
+  * this.spiralling
+  * this.transforming
+  * this.coloring
+  * this.colortwisting
+  * this.perlin
+  * this.stepped
+  */
 
-  // Variables for SIZE & GROWTH  
-  this.rStart = rStart_; // Starting radius
-  this.rMin = 1; // Minimum radius
+  // GROWTH & REPRODUCTION
+  this.age = 0; // A new cell always starts with age = 0
+  this.fertility = p.fertileStart; // For the time being, fertility threshold is global
+  this.health = 300; // Number of frames     before DEATH
+  this.collCount = 3; // Number of collisions before DEATH
+  
+  // SIZE AND SHAPE
+  this.rStart = rStart_; // Starting radius, copied from constructor
+  this.rMin = p.cellEndSize; // Minimum radius, for the time being a global
   //this.rMin = map(this.dna.genes[0], 0, 1, 1, this.rStart/3);
-  this.rMaxMax = 10; // Maximum possible value for maximum radius
+  this.rMaxMax = 10; // Maximum possible value for maximum radius 
   this.rMax = this.rMin + map(this.dna.genes[1], 0, 1, 3, this.rMaxMax); // Maximum radius
   this.r = this.rStart; // Initial value for radius
   this.flatness = map(this.dna.genes[13], 0, 1, 1, 1); // To make circles into ellipses
-  this.growth = map(this.dna.genes[2], 0, 1, 0.01, 0.3); // Rate at which radius grows
-  this.drawStep = this.r * 2 / this.velocity.mag(); // Used in subroutine in display() to draw ellipse at stepped interval
-  //this.drawStep = r*2; // Alternative calculation (original guess)
+  this.growth = p.growth;
+  //this.growth = map(this.dna.genes[2], 0, 1, 0.01, 0.3); // Rate at which radius grows
+  //this.drawStep = this.r * 2 / this.velocity.mag(); // Used in subroutine in display() to draw ellipse at stepped interval
+  this.drawStep = this.r*2; // Alternative calculation (original guess)
 
-  //  Variables for MOVEMENT (PERLIN only)
+  // COMMON
+  this.position = pos.copy(); //cell has position
+  this.velocity = p5.Vector.random2D(); //cell has velocity
+
+  // PERLIN
   this.vMax = map(this.dna.genes[4], 0, 1, 0, 4); //Maximum velocity when using movePerlin()
   this.xoff = random(1000); //Seed for noise
   this.yoff = random(1000); //Seed for noise
   this.step = map(this.dna.genes[3], 0, 1, 0.001, 0.006); //Step-size for noise
 
-  // Variables for LINEAR MOVEMENT WITH COLLISIONS
-  this.m = this.r * 0.1; // Mass (sort of)
+  // COLOUR
 
   // FILL COLOR
   this.cellFillColor = cellFillColor_;
-  //println(this.cellFillColor);
-  //println(hue(this.cellFillColor));
-  //println(radians(hue(this.cellFillColor)));
-  this.fillColVector = p5.Vector.fromAngle(radians(hue(this.cellFillColor)));
-
+    if (p.debugCellPrintln) {
+    println("03 (in cell) this.cellFillColor= " + this.cellFillColor);
+    println("04 (in cell) hue(this.cellFillColor)= " + hue(this.cellFillColor));
+  }
+  
   //this.fill_Alpha = map(this.dna.genes[8], 0, 1, 0, 255);
   this.fill_Alpha = 10;
 
   //STROKE COLOR
   this.cellStrokeColor = cellStrokeColor_;
-  this.strokeColVector = p5.Vector.fromAngle(radians(hue(this.cellStrokeColor)));
-
+  
   //this.stroke_Alpha = map(this.dna.genes[12], 0, 1, 0, 255);
   this.stroke_Alpha = 10; // (previous values: 18, 45)
 
+  // COLOUR (other stuff)
   this.strokeOffset = random(-PI, PI);
 
-  // Variables for LIFE, DEATH & REPRODUCTION
-  this.age = 0; // A new cell always starts with age = 0
-  this.fertility = 0; // A new cell always starts with fertility = 0
-  this.fertile = 100; // If fertility < fertile, reproduction will not occur
-  this.health = 300; // Number of frames     before DEATH
-  this.collCount = 3; // Number of collisions before DEATH
+  // Variables for LINEAR MOVEMENT WITH COLLISIONS
+  this.m = this.r * 0.1; // Mass (sort of)
 
   this.run = function() {
+    this.live();
+    if (p.moving) {
+      if (p.perlin) {this.movePerlin();}
+      else {this.moveLinear();}
+    }
     //this.moveLinear();
     //this.moveLinearStepped();
-    if (p.moving) {this.movePerlin();}
     //this.movePerlinStepped();
-    if (p.growing) {this.grow();}
+    if (p.growing) {this.updateSize();}
+    if (p.spawning) {this.updateFertility();}
     if (p.wraparound) {this.checkBoundaryWraparound();} else {this.checkBoundaryRebound();}
     this.display();
     if (p.debugCellText) {this.cellDebuggerText(); }
     if (p.debugCellPrintln) {this.cellDebuggerPrintln(); }
   };
 
-  this.grow = function() {
+  this.live = function() {
     this.age += 1;
-    this.fertility += 1;
     //this.health -= 1;
-    this.r -= this.growth;
-    //if (this.r >= this.rMax) { this.growth *= -1; }
     this.drawStep--;
     //if (this.drawStep < 0) {this.drawStep = r*2; }
     if (this.drawStep < 0) {
       this.drawStep = this.r * 2 / this.velocity.mag();
     }
+  };
+
+  this.updateSize = function() {
+    this.r -= this.growth; // Cell can only shrink for now
+    //if (this.r >= this.rMax) { this.growth *= -1; } // Old idea to reverse growth when max size reached
+  };
+
+  this.updateFertility = function() {
+    if (this.r < this.rStart * this.fertility) { this.fertile = true; } else {this.fertile = false; } // A cell is fertile if r is within limit (a % of rStart)
   };
 
   this.moveLinear = function() {
@@ -381,7 +454,8 @@ var strokeColVector = createVector();
 
   this.moveLinearStepped = function() {
     this.velocity.normalize(); // Convert to a unit-vector (magnitude = 1)
-    this.velocity.mult(this.r + this.r + this.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
+    //this.velocity.mult(this.r + this.r + this.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
+    this.velocity.mult(this.r + this.r + p.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
     this.position.add(this.velocity);
   };
 
@@ -403,7 +477,8 @@ var strokeColVector = createVector();
     this.xoff += this.step;
     this.yoff += this.step;
     velocity.normalize(); // Convert to a unit-vector (magnitude = 1)
-    velocity.mult(this.r + this.r + this.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
+    //velocity.mult(this.r + this.r + this.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
+    velocity.mult(this.r + this.r + p.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
     this.position.add(velocity);
   };
 
@@ -473,8 +548,9 @@ var strokeColVector = createVector();
     var angle = this.velocity.heading();
     push();
     translate(this.position.x, this.position.y);
-    rotate(angle);
+    //rotate(angle);
     ellipse(0, 0, this.r, this.r * this.flatness);
+    if (this.fertile) {fill(0); ellipse(0, 0, p.cellEndSize, p.cellEndSize);} else {fill(255); ellipse(0, 0, p.cellEndSize, p.cellEndSize);}
     /*if (this.drawStep < 1) {
       fill(0, 80);
       //stroke(0);
@@ -485,9 +561,9 @@ var strokeColVector = createVector();
 
   this.checkCollision = function(other) {
     // Method receives a Cell object 'other' to get the required info about the collidee
-    if (this.fertility > 80) {
-      // Collision is not checked for cells whose fertility is below this value to prevent young spawn from colliding with their parents.
-      // Should this test be moved upstream to where the method is called from?
+    if (this.fertile) {
+      // Collision is not checked for infertile cells to prevent young spawn from colliding with their parents.
+      // Consider moving this test upstream to where the method is called from
 
       var distVect = p5.Vector.sub(other.position, this.position); // Static vector to get distance between the cell & other
 
@@ -496,58 +572,7 @@ var strokeColVector = createVector();
 
       if (distMag < (this.r + other.r)) { // Test to see if a collision has occurred : is distance < sum of cell radius + other cell radius?
 
-        //this.growth *= -1;         // Trying an idea - collision causes this.growthrate to toggle, even for infertile cells. See below.
-        //other.growth *= -1;
-
-        if (this.fertility > this.fertile && other.fertility > other.fertile) { // Test to see if both cell & other are fertile
-
-          //this.growth *= -1;         // Collision resulting in spawn causes growth-rate to toggle.
-          //other.growth *= -1;
-
-          // Update radius's    // Trying an idea - collision causes growthrate to toggle, even for infertile cells. See below.
-          //this.r *= 0.1;
-          //other.r *= 0.1;
-
-          // Decrease collision counters. NOTE Only done on spawn, so is more like a 'spawn limit'
-          this.collCount--;
-          other.collCount--;
-
-          // Calculate position for spawn based on PVector between cell & other (leaving 'distVect' unchanged, as it is needed later)
-          this.spawnPos = distVect.copy(); // Create spawnPos as a copy of the (already available) distVect which points from parent cell to other
-          this.spawnPos.normalize();
-          this.spawnPos.mult(this.r); // The spawn position is located at parent cell's radius
-          this.spawnPos.add(this.position);
-
-          // Calculate velocity vector for spawn as being centered between parent cell & other
-          this.spawnVel = this.velocity.copy(); // Create spawnVel as a copy of parent cell's velocity vector 
-          this.spawnVel.add(other.velocity); // Add dad's velocity
-          this.spawnVel.normalize(); // Normalize to leave just the direction and magnitude of 1 (will be multiplied later)
-
-          // Calculate new fill colour for child
-          this.childFillColVector = this.fillColVector.add(other.fillColVector);
-          this.childFillColVector.normalize();
-          this.childFillColor = [this.childFillColVector.heading(), 100, 100];
-          
-          // Calculate new stroke colour for child
-          this.childStrokeColVector = this.strokeColVector.add(other.strokeColVector);
-          this.childStrokeColVector.normalize();
-          this.childStrokeColor = [this.childStrokeColVector.heading(), 100, 100];
-              
-          
-          
-          // Calculate rStart for child
-          this.rStart = this.r;
-
-          // Call spawn method (in Colony) with the new parameters for position, velocity and fill-colour)
-          //colony.spawn(spawnPos.x, spawnPos.y, spawnVel.x, spawnVel.y, spawnCol.heading(), spawnCol.mag());
-          if (p.spawning) {
-            println("trying to spawn a child");
-            colony.spawn(this.spawnPos, this.childFillColor, this.childStrokeColor, this.rStart);}
-
-          //Reset fertility counter
-          //this.fertility = 0;
-          //other.fertility = 0;
-        }
+        if (this.fertile && other.fertile) {this.conception(other, distVect); }// Spawn a new cell if both colliding cells are fertile
 
         // get angle of distVect
         var theta = distVect.heading();
@@ -610,31 +635,78 @@ var strokeColVector = createVector();
     }
   };
 
+  
+
+  this.conception = function(other, distVect) {
+    // Decrease collision counters. NOTE Only done on spawn, so is more like a 'spawn limit'
+    this.collCount--;
+    other.collCount--;
+
+    // Calculate position for spawn based on PVector between cell & other (leaving 'distVect' unchanged, as it is needed later)
+    this.spawnPos = distVect.copy(); // Create spawnPos as a copy of the (already available) distVect which points from parent cell to other
+    this.spawnPos.normalize();
+    this.spawnPos.mult(this.r); // The spawn position is located at parent cell's radius
+    this.spawnPos.add(this.position);
+
+    // Calculate velocity vector for spawn as being centered between parent cell & other
+    this.spawnVel = this.velocity.copy(); // Create spawnVel as a copy of parent cell's velocity vector 
+    this.spawnVel.add(other.velocity); // Add dad's velocity
+    this.spawnVel.normalize(); // Normalize to leave just the direction and magnitude of 1 (will be multiplied later)
+
+    // Calculate new colour for child
+    if (p.debugCellPrintln) {print("spawncolor 1) this.cellFillColor= " + this.cellFillColor);}
+    if (p.debugCellPrintln) {print("spawncolor 2) other.cellFillColor= " + other.cellFillColor);}
+    this.childFillColor = lerpColor(this.cellFillColor, other.cellFillColor, 0.5);
+    
+    if (p.debugCellPrintln) {print("spawncolor 3): this.childFillColor= " + this.childFillColor);}
+
+    // Calculate new stroke colour for child
+    this.childStrokeColor = lerpColor(this.cellStrokeColor, other.cellStrokeColor, 0.5);
+  
+    // Calculate rStart for child
+    this.rStart = this.r;
+    other.rStart = other.r;
+
+    // Call spawn method (in Colony) with the new parameters for position, velocity and fill-colour)
+    //colony.spawn(spawnPos.x, spawnPos.y, spawnVel.x, spawnVel.y, spawnCol.heading(), spawnCol.mag());
+    if (p.spawning) {
+      colony.spawn(this.spawnPos, this.childFillColor, this.childStrokeColor, this.rStart);}
+
+    //Reset fertility counter
+    //this.fertility = 0;
+    //other.fertility = 0;
+  }
+
   this.cellDebuggerText = function() {
+    var rowHeight = 15;
     fill(255);
-    textSize(10);
-    text("Your debug text HERE", this.position.x, this.position.y);
+    textSize(rowHeight);
+    //text("Your debug text HERE", this.position.x, this.position.y);
+    // RADIUS
     //text("r:" + this.r, this.position.x, this.position.y);
-    //text("rStart:" + this.rStart, this.position.x, this.position.y + 10);
-    //text("fill_HR:" + this.fill_HR, this.position.x, this.position.y);
-    //text("fill_SG:" + this.fill_SG, this.position.x, this.position.y + 10);
-    //text("fill_BB:" + this.fill_BB, this.position.x, this.position.y + 20);
-    //text("fill_Al:" + this.fill_Alpha, this.position.x, this.position.y + 30);
-    //text("rMax:" + this.rMax, this.position.x, this.position.y+10);
-    //text("growth:" + this.growth, this.position.x, this.position.y+20);
-    //text("age:" + this.age, this.position.x, this.position.y + 20);
-    //text("fertile:" + this.fertile, this.position.x, this.position.y + 30);
-    //text("fertility:" + this.fertility, this.position.x, this.position.y + 40);
-    //text("collCount:" + this.collCount, this.position.x, this.position.y + 50);
-    //text("x-velocity:" + this.velocity.x, this.position.x, this.position.y+0);
-    //text("y-velocity:" + this.velocity.y, this.position.x, this.position.y+10);
-    //text("velocity heading:" + this.velocity.heading(), this.position.x, this.position.y+20);
-    //println("X: " + this.position.x + "   Y:" + this.position.y + "   r:" + this.r + "   m:" + this.m + "  collCount:" + this.collCount);
-    //println("X: " + this.position.x + "   Width+r:" + (width+this.r) + "   Y:" + this.position.y  + "   height+r:" +(height+this.r) + "  r:" + this.r);
+    //text("rStart:" + this.rStart, this.position.x, this.position.y + rowHeight);
+    //text("rEnd:" + p.cellEndSize, this.position.x, this.position.y + rowHeight*2);
+    
+    
+    // COLOUR
+    text("this.cellFillCol:" + this.cellFillColor, this.position.x, this.position.y + rowHeight*1);
+    //text("this.cellStrokeCol:" + this.cellStrokeColor, this.position.x, this.position.y + rowHeight*2);
+    
+    // GROWTH
+    //text("growth:" + this.growth, this.position.x, this.position.y + rowHeight*3);
+    //text("age:" + this.age, this.position.x, this.position.y + rowHeight*4);
+    //text("fertility:" + this.fertility, this.position.x, this.position.y + rowHeight*3);
+    //text("fertile:" + this.fertile, this.position.x, this.position.y + rowHeight*4);
+    //text("collCount:" + this.collCount, this.position.x, this.position.y + rowHeight*3);
+    
+    // MOVEMENT
+    //text("vel.x:" + this.velocity.x, this.position.x, this.position.y + rowHeight*4);
+    //text("vel.y:" + this.velocity.y, this.position.x, this.position.y + rowHeight*5);
+    //text("vel.heading(deg):" + degrees(this.velocity.heading()), this.position.x, this.position.y + rowHeight*6);
   };
 
   this.cellDebuggerPrintln = function() {
-    println("Cell debug in terminal ON")
+    //println("Cell debug in terminal ON")
     //println("cell.debugger/" + "position.x" + this.position.x + "position.y" + this.position.y);
     //println("cell.debugger/" + "radius" + this.r);
   };
