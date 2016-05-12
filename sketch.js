@@ -1,8 +1,7 @@
 /*
- * 2016.05.04 16:53 Added debug line which indicates heading of Color Vector
- * 2016.05.06 08:50 SpawnCol is 180 degrees offset from expected value
- *                  - added a 'rotate PI' which seems to help
- *                  - But WHY is it needed?
+ * 2016.05.12 06:43 Replacing color-vectors with simple lerpColor function
+ *                  Started, but to complete I need to convert array [x,y,z] to color(x,y,z)
+ *
  */
 
 var sketchContainer = "sketch";
@@ -38,6 +37,7 @@ var debugColony; // If true, debug functions for Colony class are enabled
 
 
 function setup() {
+  colorMode(HSB, 360, 100, 100, 100);
   p = new parameters();
   gui = new dat.GUI();
   initGUI();
@@ -46,7 +46,6 @@ function setup() {
 
   //frameRate(10); // Useful for debugging
 
-  colorMode(HSB, 360, 100, 100, 100);
   smooth();
   ellipseMode(RADIUS);
   background(p.bkgColor);
@@ -210,29 +209,29 @@ var initGUI = function () {
 
 
 var parameters = function () {
-  this.colonySize = 3; // Max number of cells in the colony
-  this.bkgColHSV = { h: 0, s: 0, v: 1 };
-  this.bkgColor = [0, 0, 100]; // Background colour
+  this.colonySize = 2; // Max number of cells in the colony
+  this.bkgColHSV = { h: 0, s: 0, v: 0 };
+  this.bkgColor = [0, 0, 0]; // Background colour
   this.cellFillColHSV = { h: 0, s: 1, v: 1 };
   this.cellFillColor = [0, 100, 100]; // Cell colour
   this.cellFillAlpha = 100;
   this.cellStrokeColHSV = { h: 180, s: 1, v: 1 };
   this.cellStrokeColor = [180, 100, 100]; // Cell colour
-  this.cellStrokeAlpha = 0;
-  this.cellStartSize = 150; // Cell radius at spawn
-  this.cellEndSize = 2;
-  this.growth = 0.08;
+  this.cellStrokeAlpha = 6;
+  this.cellStartSize = 100; // Cell radius at spawn
+  this.cellEndSize = 3;
+  this.growth = 0.04;
   this.fertileStart = 0.9; // Cell becomes fertile when size has shrunk to this % of startSize
   this.wraparound = true; // If true, cells leaving the canvas will wraparound, else rebound from walls
-  this.trails = false;
+  this.trails = true;
   this.veils = false;
   this.moving = true;
   this.perlin = false;
   this.spawning = true;
   this.growing = true;
   this.debugMain = false; 
-  this.debugCellText = false;
-  this.debugCellPrintln = false;
+  this.debugCellText = true;
+  this.debugCellPrintln = true;
   this.debugColony = false;
 }
 
@@ -335,9 +334,6 @@ function Colony(num, rStart_) { // Imports 'num' from Setup in main, the number 
 // cell Class
 function Cell(pos, cellFillColor_, cellStrokeColor_, dna_, rStart_) {
 
-var fillColVector = createVector(); 
-var strokeColVector = createVector(); 
-
   //  Objects
   
   this.dna = dna_;
@@ -402,13 +398,9 @@ var strokeColVector = createVector();
 
   // FILL COLOR
   this.cellFillColor = cellFillColor_;
-  this.fillColVector = p5.Vector.fromAngle(radians(hue(this.cellFillColor)));
-  this.fillColVector.mult(this.r);
-  if (p.debugCellPrintln) {
+    if (p.debugCellPrintln) {
     println("03 (in cell) this.cellFillColor= " + this.cellFillColor);
     println("04 (in cell) hue(this.cellFillColor)= " + hue(this.cellFillColor));
-    println("05 radians(hue(this.cellFillColor)))= " + radians(hue(this.cellFillColor)));
-    println("06 this.fillColVector= " + String(this.fillColVector));
   }
   
   //this.fill_Alpha = map(this.dna.genes[8], 0, 1, 0, 255);
@@ -416,8 +408,7 @@ var strokeColVector = createVector();
 
   //STROKE COLOR
   this.cellStrokeColor = cellStrokeColor_;
-  this.strokeColVector = p5.Vector.fromAngle(radians(hue(this.cellStrokeColor)));
-
+  
   //this.stroke_Alpha = map(this.dna.genes[12], 0, 1, 0, 255);
   this.stroke_Alpha = 10; // (previous values: 18, 45)
 
@@ -566,9 +557,6 @@ var strokeColVector = createVector();
     translate(this.position.x, this.position.y);
     //rotate(angle);
     ellipse(0, 0, this.r, this.r * this.flatness);
-    stroke(0);
-    strokeWeight(3);
-    line (0,0,this.fillColVector.x, this.fillColVector.y);
     if (this.fertile) {fill(0); ellipse(0, 0, p.cellEndSize, p.cellEndSize);} else {fill(255); ellipse(0, 0, p.cellEndSize, p.cellEndSize);}
     /*if (this.drawStep < 1) {
       fill(0, 80);
@@ -673,30 +661,15 @@ var strokeColVector = createVector();
     this.spawnVel.normalize(); // Normalize to leave just the direction and magnitude of 1 (will be multiplied later)
 
     // Calculate new colour for child
-    if (p.debugCellPrintln) {print("spawncolor 1) this.fillColVector= " + String(this.fillColVector));}
-    if (p.debugCellPrintln) {print("spawncolor 2) other.fillColVector= " + String(this.fillColVector));}
-    this.childFillColVector = this.fillColVector.add(other.fillColVector);
-    if (p.debugCellPrintln) {print("spawncolor 3) this.childFillColVector= " + String(this.childFillColVector));}
-    this.childFillColVector.normalize();
-    this.childFillColVector.rotate(PI);
-    if (p.debugCellPrintln) {print("spawncolor 4) this.childFillColVector(normed)= " + String(this.childFillColVector));}
-    if (p.debugCellPrintln) {print("spawncolor 4a) this.childFillColVector HEADING= " + this.childFillColVector.heading());}
-    if (p.debugCellPrintln) {print("spawncolor 4b) this.childFillColVector HEADING DEGREES= " + degrees(this.childFillColVector.heading()));}
-    this.childFillTemp = map(this.childFillColVector.heading(), -PI, PI, 0, 360);
-    this.childFillColor =  [this.childFillTemp, 100, 100];
-    //this.childFillColor =  [this.childFillTemp-180, 100, 100];
-
-    //this.childFillColor = [degrees(this.childFillColVector.heading()), 100, 100];
-    if (p.debugCellPrintln) {print("spawncolor 5) this.childFillColor= " + this.childFillColor);}
+    if (p.debugCellPrintln) {print("spawncolor 1) this.cellFillColor= " + this.cellFillColor);}
+    if (p.debugCellPrintln) {print("spawncolor 2) other.cellFillColor= " + other.cellFillColor);}
+    this.childFillColor = lerpColor(this.cellFillColor, other.cellFillColor, 0.5);
+    
+    if (p.debugCellPrintln) {print("spawncolor 3): this.childFillColor= " + this.childFillColor);}
 
     // Calculate new stroke colour for child
-    this.childStrokeColVector = this.strokeColVector.add(other.strokeColVector);
-    this.childStrokeColVector.normalize();
-    this.childStrokeColVector.rotate(PI);
-    this.childStrokeTemp = map(this.childStrokeColVector.heading(), -PI, PI, 0, 360);
-    this.childStrokeColor =  [this.childStrokeTemp, 100, 100];
-    //this.childStrokeColor =  [this.childStrokeTemp-180, 100, 100];
-    
+    this.childStrokeColor = lerpColor(this.cellStrokeColor, other.cellStrokeColor, 0.5);
+  
     // Calculate rStart for child
     this.rStart = this.r;
     other.rStart = other.r;
@@ -724,19 +697,19 @@ var strokeColVector = createVector();
     
     // COLOUR
     text("this.cellFillCol:" + this.cellFillColor, this.position.x, this.position.y + rowHeight*1);
-    text("this.cellStrokeCol:" + this.cellStrokeColor, this.position.x, this.position.y + rowHeight*2);
+    //text("this.cellStrokeCol:" + this.cellStrokeColor, this.position.x, this.position.y + rowHeight*2);
     
     // GROWTH
     //text("growth:" + this.growth, this.position.x, this.position.y + rowHeight*3);
     //text("age:" + this.age, this.position.x, this.position.y + rowHeight*4);
     //text("fertility:" + this.fertility, this.position.x, this.position.y + rowHeight*3);
     //text("fertile:" + this.fertile, this.position.x, this.position.y + rowHeight*4);
-    text("collCount:" + this.collCount, this.position.x, this.position.y + rowHeight*3);
+    //text("collCount:" + this.collCount, this.position.x, this.position.y + rowHeight*3);
     
     // MOVEMENT
-    text("vel.x:" + this.velocity.x, this.position.x, this.position.y + rowHeight*4);
-    text("vel.y:" + this.velocity.y, this.position.x, this.position.y + rowHeight*5);
-    text("vel.heading(deg):" + degrees(this.velocity.heading()), this.position.x, this.position.y + rowHeight*6);
+    //text("vel.x:" + this.velocity.x, this.position.x, this.position.y + rowHeight*4);
+    //text("vel.y:" + this.velocity.y, this.position.x, this.position.y + rowHeight*5);
+    //text("vel.heading(deg):" + degrees(this.velocity.heading()), this.position.x, this.position.y + rowHeight*6);
   };
 
   this.cellDebuggerPrintln = function() {
