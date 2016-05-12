@@ -1,7 +1,7 @@
 /*
- * 2016.05.12 06:43 Replacing color-vectors with simple lerpColor function
- *                  Started, but to complete I need to convert array [x,y,z] to color(x,y,z)
- *
+ * 2016.05.12 06:43
+ * Replaced color-vectors with simple lerpColor function
+ * Spawn color is a 50/50 lerp between both parents
  */
 
 var sketchContainer = "sketch";
@@ -11,14 +11,7 @@ var colony; // A colony object
 var col; // PVector col needs to be declared to allow for random picker
 
 var colonySize; // Max number of cells in the colony
-var bkgColHSV;
-var bkgColor; // Backgr0und colour
-var cellFillColHSV;
-var cellFillColorcellEndSize; // Cell fill colour
-var cellFillAlpha;
-var cellStrokeColHSV;
-var cellStrokeColor; // Cell fill colour
-var cellStrokeAlpha;
+var cellEndSize; // Cell fill colour
 var cellStartSize; // Cell radius at spawn
 var cellEndSize; // Cell radius at 'death by size limit'
 var growth; // Growth rate for cell
@@ -109,8 +102,8 @@ function screendump() {
 function keyTyped() {
   if (key === 'b') {
     var spawnPos = createVector(random(width), random(height));
-    var testFillColor = [240, 100, 100];
-    var testStrokeColor = [0, 0, 100];
+    var testFillColor = color(240, 100, 100);
+    var testStrokeColor = color(0, 0, 100);
     if (p.debugMain) {print(String(testFillColor));}
     colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
     //screendump();
@@ -118,8 +111,8 @@ function keyTyped() {
   
   if (key === 'g') {
     var spawnPos = createVector(random(width), random(height));
-    var testFillColor = [120, 100, 100];
-    var testStrokeColor = [0, 0, 100];
+    var testFillColor = color(120, 100, 100);
+    var testStrokeColor = color(0, 0, 100);
     if (p.debugMain) {print(String(testFillColor));}
     colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
     //screendump();
@@ -127,8 +120,8 @@ function keyTyped() {
   
   if (key === 'r') {
     var spawnPos = createVector(random(width), random(height));
-    var testFillColor = [0, 100, 100];
-    var testStrokeColor = [0, 0, 100];
+    var testFillColor = color(0, 100, 100);
+    var testStrokeColor = color(0, 0, 100);
     if (p.debugMain) {print(String(testFillColor));}
     colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
     //screendump();
@@ -177,20 +170,20 @@ var initGUI = function () {
 	var f3 = gui.addFolder('Background');
 	  var controller = f3.addColor(p, 'bkgColHSV').name('Background Colour');
 	    controller.onChange(function(value) {
-	      p.bkgColor = [value.h, value.s*100, value.v*100];
+	      p.bkgColor = color(value.h, value.s*100, value.v*100);
 	      background(p.bkgColor);
 	    });
 	var f4 = gui.addFolder("Cell Fill");
 	  var controller = f4.addColor(p, 'cellFillColHSV').name('Cell Fill Colour');
 	    controller.onChange(function(value) {
-	      p.cellFillColor = [value.h, value.s*100, value.v*100];
+	      p.cellFillColor = color(value.h, value.s*100, value.v*100);
 	    });
 	  var controller = f4.add(p, 'cellFillAlpha', 0, 100).name('Cell Fill Alpha');
 	    controller.onChange(function(value) {populateColony();});
 	var f5 = gui.addFolder("Cell Stroke");
 	  var controller = f5.addColor(p, 'cellStrokeColHSV').name('Cell Stroke Colour');
 	    controller.onChange(function(value) {
-	      p.cellStrokeColor = [value.h, value.s*100, value.v*100];
+	      p.cellStrokeColor = color(value.h, value.s*100, value.v*100);
 	    });
 	  var controller = f5.add(p, 'cellStrokeAlpha', 0, 100).name('Cell Stroke Alpha');
 	    controller.onChange(function(value) {populateColony();});
@@ -209,29 +202,29 @@ var initGUI = function () {
 
 
 var parameters = function () {
-  this.colonySize = 2; // Max number of cells in the colony
+  this.colonySize = 80; // Max number of cells in the colony
   this.bkgColHSV = { h: 0, s: 0, v: 0 };
-  this.bkgColor = [0, 0, 0]; // Background colour
+  this.bkgColor = color(0, 0, 0); // Background colour
   this.cellFillColHSV = { h: 0, s: 1, v: 1 };
-  this.cellFillColor = [0, 100, 100]; // Cell colour
+  this.cellFillColor = color(0, 100, 100); // Cell colour
   this.cellFillAlpha = 100;
   this.cellStrokeColHSV = { h: 180, s: 1, v: 1 };
-  this.cellStrokeColor = [180, 100, 100]; // Cell colour
+  this.cellStrokeColor = color(180, 100, 100); // Cell colour
   this.cellStrokeAlpha = 6;
   this.cellStartSize = 100; // Cell radius at spawn
-  this.cellEndSize = 3;
+  this.cellEndSize = 1;
   this.growth = 0.04;
   this.fertileStart = 0.9; // Cell becomes fertile when size has shrunk to this % of startSize
   this.wraparound = true; // If true, cells leaving the canvas will wraparound, else rebound from walls
   this.trails = true;
   this.veils = false;
   this.moving = true;
-  this.perlin = false;
+  this.perlin = true;
   this.spawning = true;
   this.growing = true;
   this.debugMain = false; 
-  this.debugCellText = true;
-  this.debugCellPrintln = true;
+  this.debugCellText = false;
+  this.debugCellPrintln = false;
   this.debugColony = false;
 }
 
