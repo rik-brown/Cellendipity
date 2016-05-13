@@ -1,6 +1,13 @@
 /*
- * 2016.05.12 20:42
- * New branch: Issue 15 Cell DNA
+ * 2016.05.13 21:01
+ * New branch: Issue 11 Fixing ColorTwist
+ * Missing/broken feature
+ * Colour parameters (esp. saturation & brightness) are modulated
+ * as radius progresses from start- to end-size
+ *
+ * Ideas for menu headings:
+ * Modifiers (for colortwisting etc.)
+ * Variance (for degree of influence from DNA)
  */
 
 var sketchContainer = "sketch";
@@ -18,6 +25,7 @@ function setup() {
   
   p = new parameters();
   gui = new dat.GUI();
+  dat.GUI.toggleHide();
   initGUI();
   
   background(p.bkgColor);
@@ -29,6 +37,7 @@ function draw() {
   if (p.veils) {veil();} // Draws a near-transparent 'veil' in background colour over the  frame
   colony.run();
   if (colony.cells.length === 0 && keyIsPressed) {
+    p = new parameters();
     // Repopulate the colony if it suffers an extinction
     //screendump(); //WARNING! Need to stop after doing this once!
     //veil();                       // Draw a veil over the previous colony to gradually fade it into oblivion
@@ -174,6 +183,8 @@ var initGUI = function () {
     f6.add(p, 'perlin').name('Perlin');
     f6.add(p, 'spawning').name('Spawning');
     f6.add(p, 'growing').name('Growing');
+    f6.add(p, 'coloring').name('Coloring');
+    f6.add(p, 'colorTwisting').name('ColorTwisting');
     f6.add(p, 'nucleus').name('Show nucleus');
   var f7 = gui.addFolder("Debug");
     f7.add(p, 'debugMain').name('Debug:Main');
@@ -185,18 +196,18 @@ var initGUI = function () {
 
 
 var parameters = function () {
-  this.colonySize = 10; // Max number of cells in the colony
+  this.colonySize = random (5,40); // Max number of cells in the colony
   this.bkgColHSV = { h: 0, s: 0, v: 0 };
-  this.bkgColor = color(0, 0, 0); // Background colour
+  this.bkgColor = color(random(360), random(100), random(100)); // Background colour
   this.cellFillColHSV = { h: 0, s: 1, v: 1 };
-  this.cellFillColor = color((random(360)), 100, 100); // Cell colour
-  this.cellFillAlpha = 10;
+  this.cellFillColor = color((random(360)), random(60,100), random(80,100)); // Cell colour
+  this.cellFillAlpha = 100;
   this.cellStrokeColHSV = { h: 180, s: 1, v: 1 };
   this.cellStrokeColor = color(180, 100, 100); // Cell colour
-  this.cellStrokeAlpha = 14;
-  this.cellStartSize = 100; // Cell radius at spawn
+  this.cellStrokeAlpha = 0;
+  this.cellStartSize = random(30,120); // Cell radius at spawn
   this.cellEndSize = 2;
-  this.growth = 0.05;
+  this.growth = 0.08;
   this.fertileStart = 0.9; // Cell becomes fertile when size has shrunk to this % of startSize
   this.wraparound = true; // If true, cells leaving the canvas will wraparound, else rebound from walls
   this.trails = true;
@@ -205,7 +216,9 @@ var parameters = function () {
   this.perlin = true;
   this.spawning = true;
   this.growing = true;
-  this.nucleus = true;
+  this.coloring = true;
+  this.colorTwisting = false;
+  this.nucleus = false;
   this.debugMain = false; 
   this.debugCellText = false;
   this.debugCellPrintln = false;
@@ -373,26 +386,28 @@ function Cell(pos, cellFillColor_, cellStrokeColor_, dna_, cellStartSize_) {
 
   // FILL COLOR
   //this.cellFillColor = cellFillColor_;
-  this.cellFillColor = color((hue(cellFillColor_) * map(this.dna.genes[5], 0, 1, 0.9, 1.1)), (saturation(cellFillColor_)* map(this.dna.genes[6], 0, 1, 0.8, 1.2)), (brightness(cellFillColor_)* map(this.dna.genes[7], 0, 1, 0.7, 1.3)));
-  //this.cellFillColor = color((100 * map(this.dna.genes[5], 0, 1, 0.2, 2)), saturation(cellFillColor_), brightness(cellFillColor_));
-  //cellFillColor = color(value.h, value.s*100, value.v*100);
-  
-  
-    if (p.debugCellPrintln) {
+  this.cellFill_H = hue(cellFillColor_) * map(this.dna.genes[5], 0, 1, 0.9, 1.1)
+  this.cellFill_S = saturation(cellFillColor_) * map(this.dna.genes[6], 0, 1, 0.8, 1.2)
+  this.cellFill_B = brightness(cellFillColor_) * map(this.dna.genes[7], 0, 1, 0.7, 1.3)
+  this.cellFillColor = color(this.cellFill_H, this.cellFill_S, this.cellFill_B);
+  this.cellFillAlpha = p.cellFillAlpha * map(this.dna.genes[8], 0, 1, 0.8, 1.2);
+  if (p.debugCellPrintln) {
     println("03 (in cell) this.cellFillColor= " + this.cellFillColor);
     println("04 (in cell) hue(this.cellFillColor)= " + hue(this.cellFillColor));
   }
   
-  this.cellFillAlpha = p.cellFillAlpha * map(this.dna.genes[8], 0, 1, 0.8, 1.2);
+  
 
   //STROKE COLOR
-  this.cellStrokeColor = cellStrokeColor_;
-  this.cellStrokeColor = color((hue(cellStrokeColor_) * map(this.dna.genes[9], 0, 1, 0.9, 1.1)), (saturation(cellStrokeColor_)* map(this.dna.genes[10], 0, 1, 0.8, 1.2)), (brightness(cellStrokeColor_)* map(this.dna.genes[11], 0, 1, 0.7, 1.3)));
-  
-  this.cellStrokeAlpha = p.cellStrokeAlpha * map(this.dna.genes[12], 0, 1, 0.8, 1.2);; // (previous values: 18, 45)
-
+  //this.cellStrokeColor = cellStrokeColor_;
+  this.cellStroke_H = hue(cellStrokeColor_) * map(this.dna.genes[9], 0, 1, 0.9, 1.1)
+  this.cellStroke_S = saturation(cellStrokeColor_) * map(this.dna.genes[10], 0, 1, 0.8, 1.2)
+  this.cellStroke_B = brightness(cellStrokeColor_) * map(this.dna.genes[11], 0, 1, 0.7, 1.3)
+  this.cellStrokeColor = color(this.cellStroke_H, this.cellStroke_S, this.cellStroke_B);
+  this.cellStrokeAlpha = p.cellStrokeAlpha * map(this.dna.genes[12], 0, 1, 0.8, 1.2);
+ 
   // COLOUR (other stuff)
-  this.strokeOffset = random(-PI, PI);
+  this.strokeOffset = random(-PI/2, PI/2); // Used in colorTwist to offset the stroke colour from the fill colour by this angle
 
   // Variables for LINEAR MOVEMENT WITH COLLISIONS
   this.m = this.r * 0.1; // Mass (sort of)
@@ -400,14 +415,14 @@ function Cell(pos, cellFillColor_, cellStrokeColor_, dna_, cellStartSize_) {
   this.run = function() {
     this.live();
     if (p.moving) {
-      if (p.perlin) {this.movePerlin();}
+      if (p.perlin) {this.movePerlin();} //will become a general 'updatePosition()' encompassing both Linear & Perlin
       else {this.moveLinear();}
     }
-    //this.moveLinear();
     //this.moveLinearStepped();
     //this.movePerlinStepped();
     if (p.growing) {this.updateSize();}
     if (p.spawning) {this.updateFertility();}
+    if (p.coloring) {this.updateColor();}
     if (p.wraparound) {this.checkBoundaryWraparound();} else {this.checkBoundaryRebound();}
     this.display();
     if (p.debugCellText) {this.cellDebuggerText(); }
@@ -431,6 +446,26 @@ function Cell(pos, cellFillColor_, cellStrokeColor_, dna_, cellStartSize_) {
   this.updateFertility = function() {
     if (this.r < this.cellStartSize * this.fertility) { this.fertile = true; } else {this.fertile = false; } // A cell is fertile if r is within limit (a % of cellStartSize)
   };
+
+  this.updateColor = function() {
+    //this.cellFill_S = map(this.r, this.cellStartSize, this.cellEndSize, 100, 10); // Modulate fill saturation by radius
+    this.cellFill_B = map(this.r, this.cellStartSize, this.cellEndSize, 50, 100); // Modulate fill brightness by radius
+    //this.cellFill_Alpha = map(this.r, this.cellStartSize, this.cellEndSize, 20, 100); // Modulate fill Alpha by radius
+    this.cellFillColor = color(this.cellFill_H, this.cellFill_S, this.cellFill_B);
+    
+    //this.cellStroke_Alpha = map(this.r, this.cellStartSize, this.cellEndSize, 5, 45); // Modulate stroke Alpha by radius
+    //this.cellStrokeColor = color(this.cellStroke_H, this.cellStroke_S, this.cellStroke_B);
+    
+    if (p.colorTwisting) {this.colorTwist();}
+  }
+  
+  this.colorTwist = function() {
+    var twist = map(this.r, this.cellStartSize, this.cellEndSize, -30, 30);
+    this.cellFill_H += twist;
+    if (this.cellFill_H > 360) {this.cellFill_H -= 360;}
+    if (this.cellFill_H < 0) {this.cellFill_H += 360;}
+    this.cellFillColor = color(this.cellFill_H, this.cellFill_S, this.cellFill_B);
+  }
 
   this.moveLinear = function() {
     // Simple linear movement at constant (initial) velocity
