@@ -12,6 +12,8 @@
  * 14.05 15:53 Added new cell variable 'size'
  * 15.05 16:26 Updates made in the GUI have no effect, sometimes..???
  * 17.05 23:13 Continuing with 'size'
+ * 18.05 23:13 Slightly improved but it feels messy & overcomplicated. Too many variables! Working for hue
+ *              I just need a simple 'twister' that adds an offset value measured in degrees 0-10
  */
 
 var sketchContainer = "sketch";
@@ -58,9 +60,13 @@ function populateColony() {
 
 function veil() {
   var transparency = 1; // 255 is fully opaque, 1 is virtually invisible
+  blendMode(DIFFERENCE);
   noStroke();
-  fill(hue(p.bkgColor), saturation(p.bkgColor), brightness(p.bkgColor), transparency);
+  //fill(hue(p.bkgColor), saturation(p.bkgColor), brightness(p.bkgColor), transparency);
+  fill(1);
   rect(-1, -1, width + 1, height + 1);
+  blendMode(BLEND);
+  fill(255);
 }
 
 // We can add a creature manually if we so desire
@@ -216,7 +222,8 @@ var initGUI = function () {
 
 
 var parameters = function () {
-  this.colonySize = int(random (5,15)); // Max number of cells in the colony
+  //this.colonySize = int(random (5,15)); // Max number of cells in the colony
+  this.colonySize = 1; // Max number of cells in the colony
   this.bkgColHSV = { h: random(360), s: random(), v: random() };
   this.bkgColor = color(this.bkgColHSV.h, this.bkgColHSV.s*100, this.bkgColHSV.v*100); // Background colour
   this.cellFillColHSV = { h: random(360), s: random(), v: random() };
@@ -224,11 +231,12 @@ var parameters = function () {
   this.cellFillAlpha = random(100);
   this.cellStrokeColHSV = { h: random(360), s: random(), v: random() };
   this.cellStrokeColor = color(this.cellStrokeColHSV.h, this.cellStrokeColHSV.s*100, this.cellStrokeColHSV.v*100); // Cell colour
-  this.cellStrokeAlpha = random(100);
+  //this.cellStrokeAlpha = random(100);
+  this.cellStrokeAlpha = 0;
   this.cellStartSize = random(30,120); // Cell radius at spawn
   this.cellEndSize = 2;
-  this.growth = 0.08;
-  this.fertileStart = 0.9; // Cell becomes fertile when size has shrunk to this % of startSize
+  this.growth = 0.02;
+  this.fertileStart = 0.5; // Cell becomes fertile when size has shrunk to this % of startSize
   this.wraparound = true; // If true, cells leaving the canvas will wraparound, else rebound from walls
   this.trails = true;
   this.veils = false;
@@ -237,7 +245,7 @@ var parameters = function () {
   this.spawning = true;
   this.growing = true;
   this.coloring = true;
-  this.cellFill_HTwist = false;
+  this.cellFill_HTwist = true;
   this.cellFill_STwist = false;
   this.cellFill_BTwist = false;
   this.cellFill_ATwist = false;
@@ -266,7 +274,7 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
   // VARIABLES
 
   var colonyMin = 10;
-  var colonyMax = 200;
+  var colonyMax = 500;
   var colRand = random(-PI, PI);
   
   // Create initial population of cells  
@@ -319,7 +327,7 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
 
     // If there are too many cells, remove some by 'culling' (not actually active now, functional code is commented out)
     if (this.cells.length > colonyMax) {
-      this.cull(100);
+      this.cull(colonyMax);
     }
   };
 
@@ -488,14 +496,15 @@ function Cell(pos, cellFillColor_, cellStrokeColor_, dna_, cellStartSize_) {
     * Fertile state is active when this fraction <= this.fertility
     * It also represents the 'age' of the cell, not measured in frames, but as progress from birth > death. Growth? Size? Size!
     */
-    var twist = map(this.size, 1, 0, 0.5, 1.5);
-    if (p.cellFill_HTwist) {this.cellFill_H *= twist;}
-    if (p.cellStroke_HTwist) {this.cellFill_H *= twist;}
+    this.twist = map(this.size, 1, 0, 0, 60);
+    if (p.cellFill_HTwist) {this.cellFill_Htwisted = this.twist + this.cellFill_H;}
+    if (p.cellStroke_HTwist) {this.cellStroke_H *= this.twist;}
     
     if (p.cellFill_STwist) {this.cellFill_S = map(this.size, 1, 0, 0, 100);} // Modulate fill saturation by radius
     if (p.cellFill_BTwist) {this.cellFill_B = map(this.size, 1, 0, 0, 100);} // Modulate fill brightness by radius
     if (p.cellFill_ATwist) {this.cellFill_Alpha = map(this.size, 1, 0, 0, 100);} // Modulate fill Alpha by radius
-    this.cellFillColor = color(this.cellFill_H, this.cellFill_S, this.cellFill_B);
+    
+    this.cellFillColor = color(this.cellFill_Htwisted, this.cellFill_S, this.cellFill_B);
     
     if (p.cellStroke_STwist) {this.cellStroke_S = map(this.size, 1, 0, 0, 100);} // Modulate fill saturation by radius
     if (p.cellStroke_BTwist) {this.cellStroke_B = map(this.size, 1, 0, 0, 100);} // Modulate fill brightness by radius
@@ -758,7 +767,12 @@ function Cell(pos, cellFillColor_, cellStrokeColor_, dna_, cellStartSize_) {
     
     
     // COLOUR
-    //text("this.cellFillCol:" + this.cellFillColor, this.position.x, this.position.y + rowHeight*1);
+    text("this.twist:" + this.twist, this.position.x, this.position.y + rowHeight*4);
+    text("cellFill_H:" + this.cellFill_H, this.position.x, this.position.y + rowHeight*5);
+    text("cellFill_Htw:" + this.cellFill_Htwisted, this.position.x, this.position.y + rowHeight*6);
+    text("cellFill_S:" + this.cellFill_S, this.position.x, this.position.y + rowHeight*7);
+    text("cellFill_B:" + this.cellFill_B, this.position.x, this.position.y + rowHeight*8);
+    text("this.cellFillCol:" + this.cellFillColor, this.position.x, this.position.y + rowHeight*9);
     //text("this.cellFillCol (hue):" + hue(this.cellFillColor), this.position.x, this.position.y + rowHeight*2);
     //text("this.cellStrokeCol:" + this.cellStrokeColor, this.position.x, this.position.y + rowHeight*2);
     
