@@ -4,21 +4,15 @@
  * Missing/broken feature
  * Colour parameters (esp. saturation & brightness) are modulated
  * as radius progresses from start- to end-size
+ * 'Twisters', 'benders' or 'stretchers' (can't agree on name) are now working for Fill & Stroke HSBa.
+ * The degree of modulation is currently fixed, but alternative have been tested (0-100, 50-100 etc.).
+ * An improvement would be to tie this to a 'variance' slider (both value & slider are introduced but not used)
  *
- * Ideas for menu headings:
- * Modifiers (for colortwisting etc.)
- * Variance (for degree of influence from DNA)
+ * Fertility is now linked to a new variable, 'maturity', which relates to age rather than size
+ * I can't quite remember why this was necessary, but it seemed like a good idea at the time...
+ * Fertility is multiplied by itself to 'reset' when a spawn event occurs.
+ * New variable 'size' introduced - ratio of radius to range start/end radius (to make usage easier across various functions)
  *
- * 18.05 23:13 Slightly improved but it feels messy & overcomplicated. Too many variables! Working for hue
- *              I just need a simple 'twister' that adds an offset value measured in degrees 0-10
- * 19.05 06:46 Better now, but still missing 'variance', worth persevering with!
- *
- * How do I fix the 'reset Startsize to r' on spawn (to reset fertility)
- * How do I make the 'variance' thing?
- *
- * 19.05 23:43 Introduced 'lifespan' as an experiment, something's amiss...
- * Added this.maturity, which switches on fertility but don't think it really solves anything :-|
- * Maybe I need to reconsider going back to the 'old' fertility countdown (it could be reset in a smarter way perhaps?)
  */
 
 var sketchContainer = "sketch";
@@ -164,14 +158,14 @@ var initGUI = function () {
 	      populateColony();
 	    });
 	  //f1.add(p, 'growth', 0, 1).step(0.01).name('Growth rate');
-	  var controller = f1.add(p, 'lifespan', 1000, 4000).step(10).name('Lifespan');
+	  var controller = f1.add(p, 'lifespan', 100, 5000).step(10).name('Lifespan');
 	    controller.onChange(function(value) {
 	      background(p.bkgColor);
 	      colony.cullAll();
 	      populateColony();
 	      });
 	    
-	  var controller = f1.add(p, 'fertileStart', 0.5, 0.95).step(0.01).name('Fertile radius%');
+	  var controller = f1.add(p, 'fertileStart', 0, 1).step(0.01).name('Fertile radius%');
 	    controller.onChange(function(value) {background(p.bkgColor);});
 	var f2 = gui.addFolder('Environment');
 	  var controller = f2.add(p, 'wraparound').name('Wraparound');
@@ -232,8 +226,8 @@ var initGUI = function () {
 
 var parameters = function () {
   this.variance = 1; // Degree of influence from modulators & tweakers (from 0-1 or 0-100%)
-  //this.colonySize = int(random (5,15)); // Max number of cells in the colony
-  this.colonySize = 1; // Max number of cells in the colony
+  this.colonySize = int(random (5,50)); // Max number of cells in the colony
+  //this.colonySize = 1; // Max number of cells in the colony
   this.bkgColHSV = { h: random(360), s: random(), v: random() };
   this.bkgColor = color(this.bkgColHSV.h, this.bkgColHSV.s*100, this.bkgColHSV.v*100); // Background colour
   this.fillColHSV = { h: random(360), s: random(), v: random() };
@@ -244,8 +238,8 @@ var parameters = function () {
   this.strokeColor = color(this.strokeColHSV.h, this.strokeColHSV.s*100, this.strokeColHSV.v*100); // Cell colour
   //this.strokeAlpha = random(100);
   this.strokeAlpha = 0;
-  this.lifespan = 2000; // Max lifespan in #frames
-  this.cellStartSize = random(30,120); // Cell radius at spawn
+  this.lifespan = random (100, 5000); // Max lifespan in #frames
+  this.cellStartSize = random(30,150); // Cell radius at spawn
   this.cellEndSize = 10;
   //this.growth = (this.cellStartSize-this.cellEndSize)/this.lifespan;
   this.fertileStart = 0.5; // Cell becomes fertile when size has shrunk to this % of startSize
@@ -435,7 +429,7 @@ function Cell(pos, fillColor_, strokeColor_, dna_, cellStartSize_) {
   this.fill_H = hue(fillColor_) * map(this.dna.genes[5], 0, 1, 0.95, 1.05) // 'Variance' can govern this range
   this.fill_S = saturation(fillColor_) * map(this.dna.genes[6], 0, 1, 0.9, 1.1)
   this.fill_B = brightness(fillColor_) * map(this.dna.genes[7], 0, 1, 0.9, 1.1)
-  this.fillColor = color(this.fill_H, this.fill_S, this.fill_B);
+  this.fillColor = color(this.fill_H, this.fill_S, this.fill_B); // Initial color is set
   this.fillAlpha = p.fillAlpha * map(this.dna.genes[8], 0, 1, 0.9, 1.1);
   if (p.debugCellPrintln) {
     println("03 (in cell) this.fillColor= " + this.fillColor);
@@ -446,7 +440,7 @@ function Cell(pos, fillColor_, strokeColor_, dna_, cellStartSize_) {
   this.stroke_H = hue(strokeColor_) * map(this.dna.genes[9], 0, 1, 0.95, 1.05);
   this.stroke_S = saturation(strokeColor_) * map(this.dna.genes[10], 0, 1, 0.9, 1.1);
   this.stroke_B = brightness(strokeColor_) * map(this.dna.genes[11], 0, 1, 0.9, 1.1);
-  this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B);
+  this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B); // Initial color is set
   this.strokeAlpha = p.strokeAlpha * map(this.dna.genes[12], 0, 1, 0.9, 1.1);
  
   // COLOUR (other stuff)
@@ -474,7 +468,7 @@ function Cell(pos, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   this.live = function() {
     this.age += 1;
-    this.maturity = this.age / p.lifespan;
+    this.maturity = (p.lifespan - this.age) / p.lifespan;
     //this.health -= 1;
     this.drawStep--;
     //if (this.drawStep < 0) {this.drawStep = r*2; }
@@ -491,7 +485,7 @@ function Cell(pos, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   this.updateFertility = function() {
     //if (this.size <= this.fertility) { this.fertile = true; } else {this.fertile = false; } // A cell is fertile if r is within limit (a % of cellStartSize)
-    if (this.maturity >= this.fertility) { this.fertile = true; } else {this.fertile = false; } // A cell is fertile if maturity is within limit (a % of lifespan)
+    if (this.maturity <= this.fertility) { this.fertile = true; } else {this.fertile = false; } // A cell is fertile if maturity is within limit (a % of lifespan)
   };
 
   this.updateColor = function() {
@@ -502,30 +496,28 @@ function Cell(pos, fillColor_, strokeColor_, dna_, cellStartSize_) {
     * Hue is twisted by an angle (0-120 degrees) while S, B & A all transfom in the full range 0-100
     * Should not all color values be 'twisted' by a similar amount?
     * Maybe instead of an on/off switch, there is simply a slider for 'amount of tweak' (from 0 up to an amount)
+    * Another thing: 
+    * Hue is 'circular' - from 360 the next value is 0, there is continuity
+    * How to make S & B 'circular' - maybe from 99 to 100, the next step should be 99 (like a sawtooth wave)
     */
     
-    if (p.fill_HTwist) { // Modulate fill hue by radius
-      this.fill_Htwisted = map(this.size, 1, 0, this.fill_H, this.fill_H+120); 
-      if (this.fill_Htwisted > 360) {this.fill_Htwisted -= 360;}
-      this.fillColor = color(this.fill_Htwisted, this.fill_S, this.fill_B);
-    }
-    
-    if (p.fill_STwist) {this.fill_S = map(this.size, 1, 0, 0, 100);} // Modulate fill saturation by radius
-    if (p.fill_BTwist) {this.fill_B = map(this.size, 1, 0, 0, 100);} // Modulate fill brightness by radius
+    if (p.fill_STwist) {this.fill_S = map(this.size, 1, 0, 50, 100); this.fillColor = color(this.fill_H, this.fill_S, this.fill_B);} // Modulate fill saturation by radius
+    if (p.fill_BTwist) {this.fill_B = map(this.size, 1, 0, 50, 100); this.fillColor = color(this.fill_H, this.fill_S, this.fill_B);} // Modulate fill brightness by radius
     if (p.fill_ATwist) {this.fillAlpha = map(this.size, 1, 0, 0, 100);} // Modulate fill Alpha by radius
-    
-    
-    if (p.stroke_HTwist) { // Modulate stroke hue by radius
-      this.stroke_Htwisted = map(this.size, 1, 0, this.stroke_H, this.stroke_H+120);
-      if (this.stroke_Htwisted > 360) {this.stroke_Htwisted -= 360;}
-      this.strokeColor = color(this.stroke_Htwisted, this.stroke_S, this.stroke_B);
+    if (p.fill_HTwist) { // Modulate fill hue by radius. Does not change original hue value but replaces it with a 'twisted' version
+      this.fill_Htwisted = map(this.size, 1, 0, this.fill_H, this.fill_H+60); 
+      if (this.fill_Htwisted > 360) {this.fill_Htwisted -= 360;}
+      this.fillColor = color(this.fill_Htwisted, this.fill_S, this.fill_B); //fill colour is updated with new hue value
     }
     
-    if (p.stroke_STwist) {this.stroke_S = map(this.size, 1, 0, 0, 100);} // Modulate stroke saturation by radius
-    if (p.stroke_BTwist) {this.stroke_B = map(this.size, 1, 0, 0, 100);} // Modulate stroke brightness by radius
+    if (p.stroke_STwist) {this.stroke_S = map(this.size, 1, 0, 50, 100); this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B);} // Modulate stroke saturation by radius
+    if (p.stroke_BTwist) {this.stroke_B = map(this.size, 1, 0, 50, 100); this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B);} // Modulate stroke brightness by radius
     if (p.stroke_ATwist) {this.strokeAlpha = map(this.size, 1, 0, 0, 100);} // Modulate stroke Alpha by radius
-    
-    
+    if (p.stroke_HTwist) { // Modulate stroke hue by radius
+      this.stroke_Htwisted = map(this.size, 1, 0, this.stroke_H, this.stroke_H+60);
+      if (this.stroke_Htwisted > 360) {this.stroke_Htwisted -= 360;}
+      this.strokeColor = color(this.stroke_Htwisted, this.stroke_S, this.stroke_B); //stroke colour is updated with new hue value
+    }
     
   }
   
@@ -757,8 +749,8 @@ function Cell(pos, fillColor_, strokeColor_, dna_, cellStartSize_) {
       colony.spawn(this.spawnPos, this.childFillColor, this.childStrokeColor, this.r);} // changed 14.05@15:59 from this.cellStartSize to this.r
 
     //Reset fertility counter
-    //this.fertility = 0;
-    //other.fertility = 0;
+    this.fertility *= this.fertility;
+    other.fertility *= other.fertility;
   }
 
   this.cellDebuggerText = function() {
@@ -789,8 +781,8 @@ function Cell(pos, fillColor_, strokeColor_, dna_, cellStartSize_) {
     text("maturity:" + this.maturity, this.position.x, this.position.y + rowHeight*6);
     text("lifespan:" + p.lifespan, this.position.x, this.position.y + rowHeight*7);
     //text("age:" + this.age, this.position.x, this.position.y + rowHeight*4);
-    //text("fertility:" + this.fertility, this.position.x, this.position.y + rowHeight*3);
-    //text("fertile:" + this.fertile, this.position.x, this.position.y + rowHeight*4);
+    text("fertility:" + this.fertility, this.position.x, this.position.y + rowHeight*8);
+    text("fertile:" + this.fertile, this.position.x, this.position.y + rowHeight*9);
     //text("collCount:" + this.collCount, this.position.x, this.position.y + rowHeight*3);
     
     // MOVEMENT
