@@ -8,7 +8,8 @@
  * Note: 'bounce' is only relevant when perlin = 0.
  * So: bounce will occur if (!perlin || !wraparound)
  
- * #28 Spawn velocity
+ * #28 Spawn velocity FIXED by re-introducing vel in the cell constructor
+ 
  * #34 Rotate to heading
  * #38 Size AND maturity?
  *
@@ -61,25 +62,27 @@ function veil() {
 // We can add a creature manually if we so desire
 function mousePressed() {
   var mousePos = createVector(mouseX, mouseY);
+  var vel = p5.Vector.random2D();
   if (mousePos.x < width) {
     if (p.debugMain) {print("xx " + String(mousePos));}
     if (p.debugMain) {print("yy " + String(p.fillColor));}
     if (p.debugMain) {print("zz " + String(p.strokeColor));}
     //println("fillColor: " + p.fillColor + "   fillAlpha: " + p.fillAlpha);
     //println("strokeColor: " + p.strokeColor + "   strokeAlpha: " + p.strokeAlpha);
-    colony.spawn(mousePos, p.fillColor, p.strokeColor, p.cellStartSize);
+    colony.spawn(mousePos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
   }
 }
 
 function mouseDragged() {
   var mousePos = createVector(mouseX, mouseY);
+  var vel = p5.Vector.random2D();
   if (mousePos.x < width) {
     if (p.debugMain) {print("xx " + String(mousePos));}
     if (p.debugMain) {print("yy " + String(p.fillColor));}
     if (p.debugMain) {print("zz " + String(p.strokeColor));}
     //println("fillColor: " + p.fillColor + "   fillAlpha: " + p.fillAlpha);
     //println("strokeColor: " + p.strokeColor + "   strokeAlpha: " + p.strokeAlpha);
-    colony.spawn(mousePos, p.fillColor, p.strokeColor, p.cellStartSize);
+    colony.spawn(mousePos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
   }
 }
 
@@ -275,12 +278,14 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
   for (var i = 0; i < num; i++) {
     var pos = createVector(random(width), random(height)); // Initial position vector is random
     //var pos = createVector(width/2, height/2);           // Initial position vector is center of canvas
+    var vel = p5.Vector.random2D(); // Initial velocity vector is random
     var dna = new DNA(); // Get new DNA
-    this.cells.push(new Cell(pos, p.fillColor, p.strokeColor, dna, p.cellStartSize)); // Add new Cell with DNA
+    this.cells.push(new Cell(pos, vel, p.fillColor, p.strokeColor, dna, p.cellStartSize)); // Add new Cell with DNA
   }
 
-  this.spawn = function(mousePos, fillColor_, strokeColor_, cellStartSize_) {
+  this.spawn = function(mousePos, vel, fillColor_, strokeColor_, cellStartSize_) {
     // Spawn a new cell (called by e.g. MousePressed in main, accepting mouse coords for start position)
+    //var vel = p5.Vector.random2D(); // for the time being, vel is random
     var dna = new DNA();
     var cellStartSize = cellStartSize_;
     var fillColor = fillColor_;
@@ -289,7 +294,7 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
       println("01 About to spawn with hue(fillColor)= " + hue(fillColor));
       print("02 String(fillColor)= " + String(fillColor));
     }
-    this.cells.push(new Cell(mousePos, fillColor, strokeColor, dna, cellStartSize));
+    this.cells.push(new Cell(mousePos, vel, fillColor, strokeColor, dna, cellStartSize));
   };
 
 
@@ -351,7 +356,7 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
 /* ------------------------------------------------------------------------------------------------------------- */
 
 // cell Class
-function Cell(pos, fillColor_, strokeColor_, dna_, cellStartSize_) {
+function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   //  Objects
   
@@ -402,8 +407,10 @@ function Cell(pos, fillColor_, strokeColor_, dna_, cellStartSize_) {
   this.drawStep = this.r*2; // Alternative calculation (original guess)
 
   // COMMON
-  this.position = pos.copy(); //cell has position
-  this.velocity = p5.Vector.random2D(); //cell has velocity
+  //this.position = pos.copy(); //cell has position
+  this.position = pos;
+  //this.velocity = p5.Vector.random2D(); //cell has velocity
+  this.velocity = vel; //cell has velocity
 
   // PERLIN
   this.vMax = map(this.dna.genes[4], 0, 1, 0, 4); //Maximum velocity when using movePerlin()
@@ -734,7 +741,7 @@ function Cell(pos, fillColor_, strokeColor_, dna_, cellStartSize_) {
     // Call spawn method (in Colony) with the new parameters for position, velocity and fill-colour)
     //colony.spawn(spawnPos.x, spawnPos.y, spawnVel.x, spawnVel.y, spawnCol.heading(), spawnCol.mag());
     if (p.spawning) {
-      colony.spawn(this.spawnPos, this.childFillColor, this.childStrokeColor, this.r);} // changed 14.05@15:59 from this.cellStartSize to this.r
+      colony.spawn(this.spawnPos, this.spawnVel, this.childFillColor, this.childStrokeColor, this.r);} // changed 14.05@15:59 from this.cellStartSize to this.r
 
     //Reset fertility counter
     this.fertility *= this.fertility;
