@@ -12,6 +12,7 @@
  * #38 Size AND maturity? Are both needed? FIXED. Yes, maturity causes fertile=true when size is constant
  *
  * #17 Sync to processing 'v.Better_code_00_05'
+ * New issues opened where relevant, #17 can be closed
  *
  */
 
@@ -91,26 +92,26 @@ function screenDump() {
 function keyTyped() {
   if (key === 'b') {
     var spawnPos = createVector(random(width), random(height));
-    var testFillColor = color(240, 100, 100); //BLUE
-    var testStrokeColor = color(0, 0, 100);
-    if (p.debugMain) {print(String(testFillColor));}
-    colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
+    var FillColor = color(240, 100, 100); //BLUE
+    var StrokeColor = color(0, 0, 100);
+    if (p.debugMain) {print(String(FillColor));}
+    colony.spawn(spawnPos, FillColor, StrokeColor, p.cellStartSize);
   }
   
   if (key === 'g') {
     var spawnPos = createVector(random(width), random(height));
-    var testFillColor = color(120, 100, 100); //GREEN
-    var testStrokeColor = color(0, 0, 100);
-    if (p.debugMain) {print(String(testFillColor));}
-    colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
+    var FillColor = color(120, 100, 100); //GREEN
+    var StrokeColor = color(0, 0, 100);
+    if (p.debugMain) {print(String(FillColor));}
+    colony.spawn(spawnPos, FillColor, StrokeColor, p.cellStartSize);
   }
   
   if (key === 'r') {
     var spawnPos = createVector(random(width), random(height));
-    var testFillColor = color(0, 100, 100); //RED
-    var testStrokeColor = color(0, 0, 100);
-    if (p.debugMain) {print(String(testFillColor));}
-    colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
+    var FillColor = color(0, 100, 100); //RED
+    var StrokeColor = color(0, 0, 100);
+    if (p.debugMain) {print(String(FillColor));}
+    colony.spawn(spawnPos, FillColor, StrokeColor, p.cellStartSize);
   }
   
   if (key === 'c') {
