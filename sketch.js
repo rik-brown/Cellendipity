@@ -1,17 +1,15 @@
 /*
- * 2016.05.13 21:01
- * New branch: Issue 11 Fixing ColorTwist
- * Missing/broken feature
- * Colour parameters (esp. saturation & brightness) are modulated
- * as radius progresses from start- to end-size
- * 'Twisters', 'benders' or 'stretchers' (can't agree on name) are now working for Fill & Stroke HSBa.
- * The degree of modulation is currently fixed, but alternative have been tested (0-100, 50-100 etc.).
- * An improvement would be to tie this to a 'variance' slider (both value & slider are introduced but not used)
+ * 2016.05.22 12:38
+ * New branch: 5_bugfixes
  *
- * Fertility is now linked to a new variable, 'maturity', which relates to age rather than size
- * I can't quite remember why this was necessary, but it seemed like a good idea at the time...
- * Fertility is multiplied by itself to 'reset' when a spawn event occurs.
- * New variable 'size' introduced - ratio of radius to range start/end radius (to make usage easier across various functions)
+ * Aiming to fix #6, #16, #28, #34, #38 & possibly look over #17
+ * #6 Screendump
+ * #16 Wraparound
+ * #28 Spawn velocity
+ * #34 Rotate to heading
+ * #38 Size AND maturity?
+ *
+ * #17 Sync to processing 'v.Better_code_00_05'
  *
  */
 
