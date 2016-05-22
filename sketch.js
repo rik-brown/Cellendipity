@@ -36,12 +36,9 @@ function draw() {
   if (!p.trails || p.debugCellText) {background(p.bkgColor);}
   if (p.veils) {veil();} // Draws a near-transparent 'veil' in background colour over the  frame
   colony.run();
-  if (colony.cells.length === 0 && keyIsPressed) {
-    //p = new parameters();
-    // Repopulate the colony if it suffers an extinction
-    //screendump(); //WARNING! Need to stop after doing this once!
-    //veil();                       // Draw a veil over the previous colony to gradually fade it into oblivion
-      background(p.bkgColor); // For greyscale background
+  if (colony.cells.length === 0 && keyIsPressed) { // Repopulate the colony if it suffers an extinction (wait for keypress)
+    screenDump();
+    background(p.bkgColor); // Refresh the background
     populateColony();
   }
 }
@@ -87,8 +84,8 @@ function mouseDragged() {
   }
 }
 
-function screendump() {
-  saveCanvas('test', 'png');
+function screenDump() {
+  saveCanvas('myCanvas', 'screendump.png', 'png');
 }
 
 function keyTyped() {
@@ -98,7 +95,6 @@ function keyTyped() {
     var testStrokeColor = color(0, 0, 100);
     if (p.debugMain) {print(String(testFillColor));}
     colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
-    //screendump();
   }
   
   if (key === 'g') {
@@ -107,7 +103,6 @@ function keyTyped() {
     var testStrokeColor = color(0, 0, 100);
     if (p.debugMain) {print(String(testFillColor));}
     colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
-    //screendump();
   }
   
   if (key === 'r') {
@@ -116,7 +111,6 @@ function keyTyped() {
     var testStrokeColor = color(0, 0, 100);
     if (p.debugMain) {print(String(testFillColor));}
     colony.spawn(spawnPos, testFillColor, testStrokeColor, p.cellStartSize);
-    //screendump();
   }
   
   if (key === 'c') {
@@ -129,6 +123,10 @@ function keyTyped() {
   
   if (key === 'n') {
     p.nucleus = !p.nucleus;
+  }
+  
+  if (key === 's') {
+    screenDump();
   }
 }
 
