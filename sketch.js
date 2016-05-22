@@ -10,7 +10,7 @@
  
  * #28 Spawn velocity FIXED by re-introducing vel in the cell constructor
  
- * #34 Rotate to heading
+ * #34 Rotate to heading FIXED by making the velocity variable used in Perlin into a 'this.velocity'
  * #38 Size AND maturity?
  *
  * #17 Sync to processing 'v.Better_code_00_05'
@@ -399,7 +399,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   this.r = this.cellStartSize; // Initial value for radius
   //this.size = this.r / this.cellStartSize; //A measure of progress from startSize to EndSize (an alternative indicator of age)
   this.size = map(this.r, this.cellStartSize, this.cellEndSize, 1, 0);
-  this.flatness = map(this.dna.genes[13], 0, 1, 1, 1.3); // To make circles into ellipses
+  this.flatness = map(this.dna.genes[13], 0, 1, 1, 1.7); // To make circles into ellipses
   //this.growth = p.growth;
   //this.growth = p.growth * map(this.dna.genes[2], 0, 1, 0.8, 1.2); // Rate at which radius grows
   this.growth = (this.cellStartSize-this.cellEndSize)/p.lifespan;
@@ -533,23 +533,23 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     // Simple movement based on perlin noise
     var vx = map(noise(this.xoff), 0, 1, -this.vMax, this.vMax);
     var vy = map(noise(this.yoff), 0, 1, -this.vMax, this.vMax);
-    var velocity = createVector(vx, vy);
+    this.velocity = createVector(vx, vy);
     this.xoff += this.step;
     this.yoff += this.step;
-    this.position.add(velocity);
+    this.position.add(this.velocity);
   };
 
   this.movePerlinStepped = function() {
     // Experimental movement based on perlin noise
     var vx = map(noise(this.xoff), 0, 1, -this.vMax, this.vMax);
     var vy = map(noise(this.yoff), 0, 1, -this.vMax, this.vMax);
-    var velocity = createVector(vx, vy); // The changing angle is already given. It is only the magnitude which needs to be adressed!
+    this.velocity = createVector(vx, vy); // The changing angle is already given. It is only the magnitude which needs to be adressed!
     this.xoff += this.step;
     this.yoff += this.step;
-    velocity.normalize(); // Convert to a unit-vector (magnitude = 1)
+    this.velocity.normalize(); // Convert to a unit-vector (magnitude = 1)
     //velocity.mult(this.r + this.r + this.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
-    velocity.mult(this.r + this.r + p.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
-    this.position.add(velocity);
+    this.velocity.mult(this.r + this.r + p.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
+    this.position.add(this.velocity);
   };
 
   this.checkBoundaryRebound = function() {
@@ -612,7 +612,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     var angle = this.velocity.heading();
     push();
     translate(this.position.x, this.position.y);
-    //rotate(angle);
+    rotate(angle);
     ellipse(0, 0, this.r, this.r * this.flatness);
     if (p.nucleus) {
       if (this.fertile) {
@@ -754,9 +754,9 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     textSize(rowHeight);
     //text("Your debug text HERE", this.position.x, this.position.y);
     // RADIUS
-    text("r:" + this.r, this.position.x, this.position.y + rowHeight*1);
-    text("cellStartSize:" + this.cellStartSize, this.position.x, this.position.y + rowHeight*2);
-    text("cellEndSize:" + this.cellEndSize, this.position.x, this.position.y + rowHeight*3);
+    //text("r:" + this.r, this.position.x, this.position.y + rowHeight*1);
+    //text("cellStartSize:" + this.cellStartSize, this.position.x, this.position.y + rowHeight*2);
+    //text("cellEndSize:" + this.cellEndSize, this.position.x, this.position.y + rowHeight*3);
     
     
     // COLOUR
@@ -771,19 +771,19 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     //text("this.strokeAlpha:" + this.strokeAlpha, this.position.x, this.position.y + rowHeight*5);
     
     // GROWTH
-    text("size:" + this.size, this.position.x, this.position.y + rowHeight*4);
-    text("growth:" + this.growth, this.position.x, this.position.y + rowHeight*5);
-    text("maturity:" + this.maturity, this.position.x, this.position.y + rowHeight*6);
-    text("lifespan:" + p.lifespan, this.position.x, this.position.y + rowHeight*7);
+    //text("size:" + this.size, this.position.x, this.position.y + rowHeight*4);
+    //text("growth:" + this.growth, this.position.x, this.position.y + rowHeight*5);
+    //text("maturity:" + this.maturity, this.position.x, this.position.y + rowHeight*6);
+    //text("lifespan:" + p.lifespan, this.position.x, this.position.y + rowHeight*7);
     //text("age:" + this.age, this.position.x, this.position.y + rowHeight*4);
-    text("fertility:" + this.fertility, this.position.x, this.position.y + rowHeight*8);
-    text("fertile:" + this.fertile, this.position.x, this.position.y + rowHeight*9);
+    //text("fertility:" + this.fertility, this.position.x, this.position.y + rowHeight*8);
+    //text("fertile:" + this.fertile, this.position.x, this.position.y + rowHeight*9);
     //text("collCount:" + this.collCount, this.position.x, this.position.y + rowHeight*3);
     
     // MOVEMENT
     //text("vel.x:" + this.velocity.x, this.position.x, this.position.y + rowHeight*4);
     //text("vel.y:" + this.velocity.y, this.position.x, this.position.y + rowHeight*5);
-    //text("vel.heading(deg):" + degrees(this.velocity.heading()), this.position.x, this.position.y + rowHeight*6);
+    text("vel.heading():" + this.velocity.heading(), this.position.x, this.position.y + rowHeight*0);
   };
 
   this.cellDebuggerPrintln = function() {
