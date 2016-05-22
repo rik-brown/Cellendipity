@@ -3,8 +3,11 @@
  * New branch: 5_bugfixes
  *
  * Aiming to fix #6, #16, #28, #34, #38 & possibly look over #17
- * #6 Screendump
- * #16 Wraparound
+ * #6 Screendump FIXED
+ * #16 Wraparound FIXED
+ * Note: 'bounce' is only relevant when perlin = 0.
+ * So: bounce will occur if (!perlin || !wraparound)
+ 
  * #28 Spawn velocity
  * #34 Rotate to heading
  * #38 Size AND maturity?
@@ -13,11 +16,7 @@
  *
  */
 
-var sketchContainer = "sketch";
-var guiContainer = "sketch-gui";
-
 var colony; // A colony object
-
 
 function setup() {
   //frameRate(10); // Useful for debugging
@@ -37,7 +36,7 @@ function draw() {
   if (p.veils) {veil();} // Draws a near-transparent 'veil' in background colour over the  frame
   colony.run();
   if (colony.cells.length === 0 && keyIsPressed) { // Repopulate the colony if it suffers an extinction (wait for keypress)
-    screenDump();
+    //screenDump(); // Press 's' key to save
     background(p.bkgColor); // Refresh the background
     populateColony();
   }
@@ -163,11 +162,13 @@ var initGUI = function () {
 	    
 	  var controller = f1.add(p, 'fertileStart', 0, 1).step(0.01).name('Fertile radius%');
 	    controller.onChange(function(value) {background(p.bkgColor);});
+	    
 	var f2 = gui.addFolder('Environment');
 	  var controller = f2.add(p, 'wraparound').name('Wraparound');
 	    controller.onChange(function(value) {background(p.bkgColor);});
 	  f2.add(p, 'trails').name('Trails');
 	  f2.add(p, 'veils').name('Veils');
+	  
 	var f3 = gui.addFolder('Background');
 	  var controller = f3.addColor(p, 'bkgColHSV').name('Background Colour');
 	    controller.onChange(function(value) {
@@ -175,48 +176,39 @@ var initGUI = function () {
 	      background(p.bkgColor);
 	    });
 	var f4 = gui.addFolder("Cell Fill");
-	  var controller = f4.addColor(p, 'fillColHSV').name('Cell Fill Colour');
-	    controller.onChange(function(value) {
-	      p.fillColor = color(value.h, value.s*100, value.v*100);
-	    });
-	  var controller = f4.add(p, 'fillAlpha', 0, 100).name('Cell Fill Alpha');
-	    controller.onChange(function(value) {populateColony();});
-    f4.add(p, 'fill_HTwist').name('Hue twist');
-    f4.add(p, 'fill_STwist').name('Saturation twist');
-    f4.add(p, 'fill_BTwist').name('Brightness twist');
-    f4.add(p, 'fill_ATwist').name('Alpha twist');
-	    
-	    
+  var controller = f4.addColor(p, 'fillColHSV').name('Cell Fill Colour');
+  controller.onChange(function(value) {p.fillColor = color(value.h, value.s*100, value.v*100); });
+  var controller = f4.add(p, 'fillAlpha', 0, 100).name('Cell Fill Alpha');
+  controller.onChange(function(value) {populateColony();});
+  f4.add(p, 'fill_HTwist').name('Hue twist');
+  f4.add(p, 'fill_STwist').name('Saturation twist');
+  f4.add(p, 'fill_BTwist').name('Brightness twist');
+  f4.add(p, 'fill_ATwist').name('Alpha twist');
+
 	var f5 = gui.addFolder("Cell Stroke");
-	  var controller = f5.addColor(p, 'strokeColHSV').name('Cell Stroke Colour');
-	    controller.onChange(function(value) {
-	      p.strokeColor = color(value.h, value.s*100, value.v*100);
-	    });
-	  var controller = f5.add(p, 'strokeAlpha', 0, 100).name('Cell Stroke Alpha');
-	    controller.onChange(function(value) {populateColony();});
-    f5.add(p, 'stroke_HTwist').name('Hue twist');
-    f5.add(p, 'stroke_STwist').name('Saturation twist');
-    f5.add(p, 'stroke_BTwist').name('Brightness twist');
-    f5.add(p, 'stroke_ATwist').name('Alpha twist');	    
-	    
-	    
-	    
+	var controller = f5.addColor(p, 'strokeColHSV').name('Cell Stroke Colour');
+	controller.onChange(function(value) {p.strokeColor = color(value.h, value.s*100, value.v*100); });
+	var controller = f5.add(p, 'strokeAlpha', 0, 100).name('Cell Stroke Alpha');
+	controller.onChange(function(value) {populateColony();});
+  f5.add(p, 'stroke_HTwist').name('Hue twist');
+  f5.add(p, 'stroke_STwist').name('Saturation twist');
+  f5.add(p, 'stroke_BTwist').name('Brightness twist');
+  f5.add(p, 'stroke_ATwist').name('Alpha twist'); 
+
 	    
   var f6 = gui.addFolder("Options");
-    f6.add(p, 'moving').name('Moving');
-    f6.add(p, 'perlin').name('Perlin');
-    f6.add(p, 'spawning').name('Spawning');
-    f6.add(p, 'growing').name('Growing');
-    f6.add(p, 'coloring').name('Coloring');
-    
-    f6.add(p, 'nucleus').name('Show nucleus');
+  f6.add(p, 'moving').name('Moving');
+  f6.add(p, 'perlin').name('Perlin');
+  f6.add(p, 'spawning').name('Spawning');
+  f6.add(p, 'growing').name('Growing');
+  f6.add(p, 'coloring').name('Coloring');
+  f6.add(p, 'nucleus').name('Show nucleus');
     
   var f7 = gui.addFolder("Debug");
-    f7.add(p, 'debugMain').name('Debug:Main');
-    f7.add(p, 'debugCellText').name('Debug:Cell(txt)');
-    f7.add(p, 'debugCellPrintln').name('Debug:Cell(print)');
-    f7.add(p, 'debugColony').name('Debug:Colony');
-
+  f7.add(p, 'debugMain').name('Debug:Main');
+  f7.add(p, 'debugCellText').name('Debug:Cell(txt)');
+  f7.add(p, 'debugCellPrintln').name('Debug:Cell(print)');
+  f7.add(p, 'debugColony').name('Debug:Colony');
 }
 
 
@@ -456,7 +448,8 @@ function Cell(pos, fillColor_, strokeColor_, dna_, cellStartSize_) {
     if (p.growing) {this.updateSize();}
     if (p.spawning) {this.updateFertility();}
     if (p.coloring) {this.updateColor();}
-    if (p.wraparound) {this.checkBoundaryWraparound();} else {this.checkBoundaryRebound();} // else {this.checkBoundaryKill();}
+    if (p.wraparound) {this.checkBoundaryWraparound();} else if (!p.perlin) {this.checkBoundaryRebound();}
+    // if !wraparound && perlin : cells will be killed if they leave the screen (no bounce for perlin, no offscreen-kill for linear)
     this.display();
     if (p.debugCellText) {this.cellDebuggerText(); }
     if (p.debugCellPrintln) {this.cellDebuggerPrintln(); }
@@ -582,11 +575,10 @@ function Cell(pos, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   // Death
   this.dead = function() {
-    //if (this.collCount <= 0 || this.r < this.cellEndSize || this.health <0) {return true; } 
+    //if (this.collCount <= 0 || this.health <0) {return true; } 
     if (this.r < this.cellEndSize) {return true;} // Only radius kills cell
-    else if (this.position.x > width + this.r || this.position.x < -this.r || this.position.y > height + this.r || this.position.y < -this.r) {return true;} // Death if move beyond canvas boundary
-    else {return false;
-    }
+    if (this.position.x > width + this.r || this.position.x < -this.r || this.position.y > height + this.r || this.position.y < -this.r) {return true;} // Death if move beyond canvas boundary
+    else {return false; }
   };
 
   // Copied from the original Evolution EcoSystem sketch
