@@ -5,13 +5,11 @@
  * Aiming to fix #6, #16, #28, #34, #38 & possibly look over #17
  * #6 Screendump FIXED
  * #16 Wraparound FIXED
- * Note: 'bounce' is only relevant when perlin = 0.
- * So: bounce will occur if (!perlin || !wraparound)
- 
+ *    Note: 'bounce' is only relevant when perlin = 0.
+ *    So: bounce will occur if (!perlin || !wraparound)
  * #28 Spawn velocity FIXED by re-introducing vel in the cell constructor
- 
  * #34 Rotate to heading FIXED by making the velocity variable used in Perlin into a 'this.velocity'
- * #38 Size AND maturity?
+ * #38 Size AND maturity? Are both needed? FIXED. Yes, maturity causes fertile=true when size is constant
  *
  * #17 Sync to processing 'v.Better_code_00_05'
  *
@@ -136,48 +134,48 @@ var initGUI = function () {
 
 // Add the GUI sections
 	var f1 = gui.addFolder('Cells');
-	  f1.add(p, 'variance', 0, 1).step(0.01).name('Variance');
-	  var controller = f1.add(p, 'colonySize', 1, 200).step(1).name('Colony start size');
-	    controller.onChange(function(value) {
-	      background(p.bkgColor);
-	      colony.cullAll();
-	      populateColony();
-	    });
-	  var controller = f1.add(p, 'cellStartSize', 10, 200).step(1).name('Cell start size');
-	    controller.onChange(function(value) {
-	      background(p.bkgColor);
-	      colony.cullAll();
-	      populateColony();
-	    });
-    var controller = f1.add(p, 'cellEndSize', 1, 50).step(1).name('Cell end size');
-	    controller.onChange(function(value) {
-	      background(p.bkgColor);
-	      colony.cullAll();
-	      populateColony();
-	    });
-	  //f1.add(p, 'growth', 0, 1).step(0.01).name('Growth rate');
-	  var controller = f1.add(p, 'lifespan', 100, 5000).step(10).name('Lifespan');
-	    controller.onChange(function(value) {
-	      background(p.bkgColor);
-	      colony.cullAll();
-	      populateColony();
-	      });
+	f1.add(p, 'variance', 0, 1).step(0.01).name('Variance');
+	var controller = f1.add(p, 'colonySize', 1, 200).step(1).name('Colony start size');
+	controller.onChange(function(value) {
+	  background(p.bkgColor);
+	  colony.cullAll();
+	  populateColony();
+	});
+	var controller = f1.add(p, 'cellStartSize', 10, 200).step(1).name('Cell start size');
+	controller.onChange(function(value) {
+	  background(p.bkgColor);
+	  colony.cullAll();
+	  populateColony();
+	});
+  var controller = f1.add(p, 'cellEndSize', 1, 50).step(1).name('Cell end size');
+	controller.onChange(function(value) {
+	  background(p.bkgColor);
+	  colony.cullAll();
+	  populateColony();
+	});
+	var controller = f1.add(p, 'lifespan', 100, 5000).step(10).name('Lifespan');
+	controller.onChange(function(value) {
+	  background(p.bkgColor);
+	  colony.cullAll();
+	  populateColony();
+	});
 	    
-	  var controller = f1.add(p, 'fertileStart', 0, 1).step(0.01).name('Fertile radius%');
-	    controller.onChange(function(value) {background(p.bkgColor);});
+	var controller = f1.add(p, 'fertileStart', 0, 1).step(0.01).name('Fertile radius%');
+	controller.onChange(function(value) {background(p.bkgColor);});
 	    
 	var f2 = gui.addFolder('Environment');
-	  var controller = f2.add(p, 'wraparound').name('Wraparound');
-	    controller.onChange(function(value) {background(p.bkgColor);});
-	  f2.add(p, 'trails').name('Trails');
-	  f2.add(p, 'veils').name('Veils');
+	var controller = f2.add(p, 'wraparound').name('Wraparound');
+	controller.onChange(function(value) {background(p.bkgColor);});
+	f2.add(p, 'trails').name('Trails');
+	f2.add(p, 'veils').name('Veils');
 	  
 	var f3 = gui.addFolder('Background');
-	  var controller = f3.addColor(p, 'bkgColHSV').name('Background Colour');
-	    controller.onChange(function(value) {
-	      p.bkgColor = color(value.h, value.s*100, value.v*100);
-	      background(p.bkgColor);
-	    });
+	var controller = f3.addColor(p, 'bkgColHSV').name('Background Colour');
+	controller.onChange(function(value) { 
+	  p.bkgColor = color(value.h, value.s*100, value.v*100);
+	  background(p.bkgColor);
+	});
+	
 	var f4 = gui.addFolder("Cell Fill");
   var controller = f4.addColor(p, 'fillColHSV').name('Cell Fill Colour');
   controller.onChange(function(value) {p.fillColor = color(value.h, value.s*100, value.v*100); });
@@ -229,12 +227,11 @@ var parameters = function () {
   this.strokeColor = color(this.strokeColHSV.h, this.strokeColHSV.s*100, this.strokeColHSV.v*100); // Cell colour
   //this.strokeAlpha = random(100);
   this.strokeAlpha = 0;
-  this.lifespan = random (100, 5000); // Max lifespan in #frames
+  this.lifespan = int(random (100, 5000)); // Max lifespan in #frames
   this.cellStartSize = random(30,150); // Cell radius at spawn
   this.cellEndSize = 10;
-  //this.growth = (this.cellStartSize-this.cellEndSize)/this.lifespan;
-  this.fertileStart = 0.5; // Cell becomes fertile when size has shrunk to this % of startSize
-  this.wraparound = true; // If true, cells leaving the canvas will wraparound, else rebound from walls
+  this.fertileStart = 0.5;
+  this.wraparound = true;
   this.trails = true;
   this.veils = false;
   this.moving = true;
@@ -365,7 +362,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   // DNA gene mapping (14 genes)
   // 0 = cellStartSize
   // 1 = cellEndSize
-  // 2 = growth
+  // 2 = lifespan
   // 3 = step (Perlin)
   // 4 = vMax (Perlin)
   // 5 = fill Hue
@@ -389,19 +386,16 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   // GROWTH & REPRODUCTION
   this.age = 0; // Age is 'number of frames since birth'. A new cell always starts with age = 0. What is it used for?
+  this.lifespan = p.lifespan * map(this.dna.genes[2], 0, 1, 0.8, 1.2); // Fertility can be lowered by DNA but not increased
   this.fertility = p.fertileStart * map(this.dna.genes[14], 0, 1, 0.7, 1.0); // Fertility can be lowered by DNA but not increased
-  this.health = 300; // Number of frames     before DEATH
   this.collCount = 3; // Number of collisions before DEATH
   
   // SIZE AND SHAPE
   this.cellStartSize = cellStartSize_ * map(this.dna.genes[1], 0, 1, 0.8, 1.0); // Note: If last value in map() is >1 then new cells may be larger than their parents
   this.cellEndSize = p.cellEndSize * map(this.dna.genes[2], 0, 1, 1.0, 2.0);
   this.r = this.cellStartSize; // Initial value for radius
-  //this.size = this.r / this.cellStartSize; //A measure of progress from startSize to EndSize (an alternative indicator of age)
   this.size = map(this.r, this.cellStartSize, this.cellEndSize, 1, 0);
   this.flatness = map(this.dna.genes[13], 0, 1, 1, 1.7); // To make circles into ellipses
-  //this.growth = p.growth;
-  //this.growth = p.growth * map(this.dna.genes[2], 0, 1, 0.8, 1.2); // Rate at which radius grows
   this.growth = (this.cellStartSize-this.cellEndSize)/p.lifespan;
   //this.drawStep = this.r * 2 / this.velocity.mag(); // Used in subroutine in display() to draw ellipse at stepped interval
   this.drawStep = this.r*2; // Alternative calculation (original guess)
@@ -464,8 +458,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   this.live = function() {
     this.age += 1;
-    this.maturity = (p.lifespan - this.age) / p.lifespan;
-    //this.health -= 1;
+    this.maturity = map(this.age, 0, this.lifespan, 1, 0);
     this.drawStep--;
     //if (this.drawStep < 0) {this.drawStep = r*2; }
     if (this.drawStep < 0) {
@@ -473,14 +466,12 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     }
   };
 
-  this.updateSize = function() { //Alternatively: Always growing, move this to 'living' but growth can be  =0
+  this.updateSize = function() { //Alternatively: cell is always growing, so include this in 'living' but allow for growth=0 ??
     this.r -= this.growth; // Cell can only shrink for now
-    //this.size = this.r / this.cellStartSize;
     this.size = map(this.r, this.cellStartSize, this.cellEndSize, 1, 0);
   };
 
   this.updateFertility = function() {
-    //if (this.size <= this.fertility) { this.fertile = true; } else {this.fertile = false; } // A cell is fertile if r is within limit (a % of cellStartSize)
     if (this.maturity <= this.fertility) { this.fertile = true; } else {this.fertile = false; } // A cell is fertile if maturity is within limit (a % of lifespan)
   };
 
@@ -524,8 +515,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   this.moveLinearStepped = function() {
     this.velocity.normalize(); // Convert to a unit-vector (magnitude = 1)
-    //this.velocity.mult(this.r + this.r + this.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
-    this.velocity.mult(this.r + this.r + p.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
+    this.velocity.mult(this.r + this.r + this.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
     this.position.add(this.velocity);
   };
 
@@ -547,8 +537,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     this.xoff += this.step;
     this.yoff += this.step;
     this.velocity.normalize(); // Convert to a unit-vector (magnitude = 1)
-    //velocity.mult(this.r + this.r + this.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
-    this.velocity.mult(this.r + this.r + p.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
+    velocity.mult(this.r + this.r + this.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
     this.position.add(this.velocity);
   };
 
@@ -582,8 +571,9 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   // Death
   this.dead = function() {
-    //if (this.collCount <= 0 || this.health <0) {return true; } 
-    if (this.r < this.cellEndSize) {return true;} // Only radius kills cell
+    //if (this.collCount <= 0) {return true; } // not currently in use
+    if (this.size <= 0) {return true;} // Size = 0 when r = cellEndSize
+    if (this.age >= this.lifespan) {return true;} // Death by old age (regardless of size, which may remain constant)
     if (this.position.x > width + this.r || this.position.x < -this.r || this.position.y > height + this.r || this.position.y < -this.r) {return true;} // Death if move beyond canvas boundary
     else {return false; }
   };
@@ -616,10 +606,10 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     ellipse(0, 0, this.r, this.r * this.flatness);
     if (p.nucleus) {
       if (this.fertile) {
-        fill(0); ellipse(0, 0, this.cellEndSize, this.cellEndSize);
+        fill(0); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
       }
       else {
-        fill(255); ellipse(0, 0, this.cellEndSize, this.cellEndSize);
+        fill(255); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
       }
     }
     /*if (this.drawStep < 1) {
@@ -734,14 +724,8 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     // Calculate new stroke colour for child
     this.childStrokeColor = lerpColor(this.strokeColor, other.strokeColor, 0.5);
   
-    // Calculate cellStartSize for child
-    //this.cellStartSize = this.r;     // Commented out 14.05@15:59 to avoid issue with colourtwisting (reset to cellStart causes colour to change)
-    //other.cellStartSize = other.r;   // which also means that fertility is not reset on spawn either
-
-    // Call spawn method (in Colony) with the new parameters for position, velocity and fill-colour)
-    //colony.spawn(spawnPos.x, spawnPos.y, spawnVel.x, spawnVel.y, spawnCol.heading(), spawnCol.mag());
-    if (p.spawning) {
-      colony.spawn(this.spawnPos, this.spawnVel, this.childFillColor, this.childStrokeColor, this.r);} // changed 14.05@15:59 from this.cellStartSize to this.r
+    // Call spawn method (in Colony) with the new parameters for position, velocity, colour & starting radius)
+    if (p.spawning) {colony.spawn(this.spawnPos, this.spawnVel, this.childFillColor, this.childStrokeColor, this.r);}
 
     //Reset fertility counter
     this.fertility *= this.fertility;
@@ -771,11 +755,11 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     //text("this.strokeAlpha:" + this.strokeAlpha, this.position.x, this.position.y + rowHeight*5);
     
     // GROWTH
-    //text("size:" + this.size, this.position.x, this.position.y + rowHeight*4);
+    text("size:" + this.size, this.position.x, this.position.y + rowHeight*1);
     //text("growth:" + this.growth, this.position.x, this.position.y + rowHeight*5);
-    //text("maturity:" + this.maturity, this.position.x, this.position.y + rowHeight*6);
-    //text("lifespan:" + p.lifespan, this.position.x, this.position.y + rowHeight*7);
-    //text("age:" + this.age, this.position.x, this.position.y + rowHeight*4);
+    text("maturity:" + this.maturity, this.position.x, this.position.y + rowHeight*4);
+    text("lifespan:" + this.lifespan, this.position.x, this.position.y + rowHeight*2);
+    text("age:" + this.age, this.position.x, this.position.y + rowHeight*3);
     //text("fertility:" + this.fertility, this.position.x, this.position.y + rowHeight*8);
     //text("fertile:" + this.fertile, this.position.x, this.position.y + rowHeight*9);
     //text("collCount:" + this.collCount, this.position.x, this.position.y + rowHeight*3);
