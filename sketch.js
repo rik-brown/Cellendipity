@@ -2,6 +2,7 @@
  * 2016.05.23 17:32
  * New branch: Spiralling_#48
  * Aiming to fix #42 Spiralling (missing functionality) DONE
+ * Aiming to fix #43 Stepped (missing functionality) DONE
  */
 
 var colony; // A colony object
@@ -192,6 +193,7 @@ var initGUI = function () {
   f6.add(p, 'spawning').name('Spawning');
   f6.add(p, 'growing').name('Growing');
   f6.add(p, 'spiralling').name('Spiralling');
+  f6.add(p, 'stepped').name('Stepped');
   f6.add(p, 'coloring').name('Coloring');
   f6.add(p, 'nucleus').name('Show nucleus');
     
@@ -204,7 +206,7 @@ var initGUI = function () {
 
 
 var parameters = function () {
-  this.variance = 1; // Degree of influence from modulators & tweakers (from 0-1 or 0-100%)
+  this.variance = random(1); // Degree of influence from modulators & tweakers (from 0-1 or 0-100%)
   this.colonySize = int(random (5,50)); // Max number of cells in the colony
   //this.colonySize = 1; // Max number of cells in the colony
   this.bkgColHSV = { h: random(360), s: random(), v: random() };
@@ -216,7 +218,7 @@ var parameters = function () {
   this.strokeColHSV = { h: random(360), s: random(), v: random() };
   this.strokeColor = color(this.strokeColHSV.h, this.strokeColHSV.s*100, this.strokeColHSV.v*100); // Cell colour
   //this.strokeAlpha = random(100);
-  this.strokeAlpha = 0;
+  this.strokeAlpha = 100;
   this.lifespan = int(random (100, 5000)); // Max lifespan in #frames
   this.cellStartSize = random(30,150); // Cell radius at spawn
   this.cellEndSize = 10;
@@ -229,12 +231,13 @@ var parameters = function () {
   this.spawning = true;
   this.growing = true;
   this.spiralling = true;
+  this.stepped = true;
   this.coloring = true;
   this.fill_HTwist = false;
   this.fill_STwist = false;
   this.fill_BTwist = false;
   this.fill_ATwist = false;
-  this.stroke_HTwist = true;
+  this.stroke_HTwist = false;
   this.stroke_STwist = false;
   this.stroke_BTwist = false;
   this.stroke_ATwist = false;
@@ -369,6 +372,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   // BOOLEAN
   this.fertile = false; // A new cell always starts of infertile
+  this.drawSwitch = false;
   /* e.g
   * this.stepped
   */
@@ -385,14 +389,12 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   this.r = this.cellStartSize; // Initial value for radius
   this.size = map(this.r, this.cellStartSize, this.cellEndSize, 1, 0);
   this.flatness = map(this.dna.genes[13], 0, 1, 1, 1.7); // To make circles into ellipses
-  this.growth = (this.cellStartSize-this.cellEndSize)/p.lifespan;
-  //this.drawStep = this.r * 2 / this.velocity.mag(); // Used in subroutine in display() to draw ellipse at stepped interval
-  this.drawStep = this.r*2; // Alternative calculation (original guess)
+  this.growth = (this.cellStartSize-this.cellEndSize)/p.lifespan; // Should work for both large>small and small>large
+  this.drawStepStart = this.r * p.variance; //Starting value from which drawStep counts down. Could be size * constant?
+  this.drawStep = this.drawStepStart;
 
   // COMMON
-  //this.position = pos.copy(); //cell has position
-  this.position = pos;
-  //this.velocity = p5.Vector.random2D(); //cell has velocity
+  this.position = pos; //cell has position
   this.velocity = vel; //cell has velocity
 
   // PERLIN
@@ -438,16 +440,14 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     this.display();
     if (p.debugCellText) {this.cellDebuggerText(); }
     if (p.debugCellPrintln) {this.cellDebuggerPrintln(); }
-  };
+  }
 
   this.live = function() {
     this.age += 1;
     this.maturity = map(this.age, 0, this.lifespan, 1, 0);
     this.drawStep--;
-    //if (this.drawStep < 0) {this.drawStep = r*2; }
-    if (this.drawStep < 0) {
-      this.drawStep = this.r * 2 / this.velocity.mag();
-    }
+    this.drawStepStart = this.r * p.variance ;
+    if (this.drawStep < 0) {drawSwitch = true; this.drawStep = this.drawStepStart;}
   }
 
   this.updatePosition = function() {
@@ -603,20 +603,29 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     push();
     translate(this.position.x, this.position.y);
     rotate(angle);
-    ellipse(0, 0, this.r, this.r * this.flatness);
-    if (p.nucleus) {
-      if (this.fertile) {
-        fill(0); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
-      }
-      else {
-        fill(255); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
+    if (!p.stepped) {
+      ellipse(0, 0, this.r, this.r * this.flatness);
+      if (p.nucleus) {
+        if (this.fertile) {
+          fill(0); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
+        }
+        else {
+          fill(255); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
+        }
       }
     }
-    /*if (this.drawStep < 1) {
-      fill(0, 80);
-      //stroke(0);
+    else if (this.drawStep < 1) {
       ellipse(0, 0, this.r, this.r*this.flatness);
-    }*/
+      if (p.nucleus) {
+        if (this.fertile) {
+          fill(0); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
+        }
+        else {
+          fill(255); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
+        }
+      }
+      this.drawSwitch = false;
+    }
     pop();
   };
 
