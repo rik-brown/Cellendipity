@@ -1,19 +1,7 @@
 /*
- * 2016.05.22 12:38
- * New branch: 5_bugfixes
- *
- * Aiming to fix #6, #16, #28, #34, #38 & possibly look over #17
- * #6 Screendump FIXED
- * #16 Wraparound FIXED
- *    Note: 'bounce' is only relevant when perlin = 0.
- *    So: bounce will occur if (!perlin || !wraparound)
- * #28 Spawn velocity FIXED by re-introducing vel in the cell constructor
- * #34 Rotate to heading FIXED by making the velocity variable used in Perlin into a 'this.velocity'
- * #38 Size AND maturity? Are both needed? FIXED. Yes, maturity causes fertile=true when size is constant
- *
- * #17 Sync to processing 'v.Better_code_00_05'
- * New issues opened where relevant, #17 can be closed
- *
+ * 2016.05.23 17:32
+ * New branch: Spiralling_#48
+ * Aiming to fix #42 Spiralling (missing functionality) DONE
  */
 
 var colony; // A colony object
@@ -203,6 +191,7 @@ var initGUI = function () {
   f6.add(p, 'perlin').name('Perlin');
   f6.add(p, 'spawning').name('Spawning');
   f6.add(p, 'growing').name('Growing');
+  f6.add(p, 'spiralling').name('Spiralling');
   f6.add(p, 'coloring').name('Coloring');
   f6.add(p, 'nucleus').name('Show nucleus');
     
@@ -236,9 +225,10 @@ var parameters = function () {
   this.trails = true;
   this.veils = false;
   this.moving = true;
-  this.perlin = true;
+  this.perlin = false;
   this.spawning = true;
   this.growing = true;
+  this.spiralling = true;
   this.coloring = true;
   this.fill_HTwist = false;
   this.fill_STwist = false;
@@ -374,14 +364,12 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   // 10 = stroke Saturation
   // 11 = stroke Brightness
   // 12 = stroke Alpha
-  // 13 = Ellipse flatness
+  // 13 = Ellipse flatness & spiral handedness
   // 14 = Fertility
 
   // BOOLEAN
   this.fertile = false; // A new cell always starts of infertile
   /* e.g
-  * this.spiralling
-  * this.transforming
   * this.stepped
   */
 
@@ -441,12 +429,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   this.run = function() {
     this.live();
-    if (p.moving) {
-      if (p.perlin) {this.movePerlin();} //will become a general 'updatePosition()' encompassing both Linear & Perlin
-      else {this.moveLinear();}
-    }
-    //this.moveLinearStepped();
-    //this.movePerlinStepped();
+    if (p.moving) {this.updatePosition();}
     if (p.growing) {this.updateSize();}
     if (p.spawning) {this.updateFertility();}
     if (p.coloring) {this.updateColor();}
@@ -465,16 +448,21 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     if (this.drawStep < 0) {
       this.drawStep = this.r * 2 / this.velocity.mag();
     }
-  };
+  }
+
+  this.updatePosition = function() {
+    if (p.perlin) {this.movePerlin();}
+      else {this.moveLinear();}
+  }
 
   this.updateSize = function() { //Alternatively: cell is always growing, so include this in 'living' but allow for growth=0 ??
     this.r -= this.growth; // Cell can only shrink for now
     this.size = map(this.r, this.cellStartSize, this.cellEndSize, 1, 0);
-  };
+  }
 
   this.updateFertility = function() {
-    if (this.maturity <= this.fertility) { this.fertile = true; } else {this.fertile = false; } // A cell is fertile if maturity is within limit (a % of lifespan)
-  };
+    if (this.maturity <= this.fertility) {this.fertile = true; } else {this.fertile = false; } // A cell is fertile if maturity is within limit (a % of lifespan)
+  }
 
   this.updateColor = function() {
     /*
@@ -497,7 +485,6 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
       if (this.fill_Htwisted > 360) {this.fill_Htwisted -= 360;}
       this.fillColor = color(this.fill_Htwisted, this.fill_S, this.fill_B); //fill colour is updated with new hue value
     }
-    
     if (p.stroke_STwist) {this.stroke_S = map(this.size, 1, 0, 50, 100); this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B);} // Modulate stroke saturation by radius
     if (p.stroke_BTwist) {this.stroke_B = map(this.size, 1, 0, 50, 100); this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B);} // Modulate stroke brightness by radius
     if (p.stroke_ATwist) {this.strokeAlpha = map(this.size, 1, 0, 0, 100);} // Modulate stroke Alpha by radius
@@ -506,11 +493,11 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
       if (this.stroke_Htwisted > 360) {this.stroke_Htwisted -= 360;}
       this.strokeColor = color(this.stroke_Htwisted, this.stroke_S, this.stroke_B); //stroke colour is updated with new hue value
     }
-    
   }
   
   this.moveLinear = function() {
     // Simple linear movement at constant (initial) velocity
+    if (p.spiralling) {this.updateHeading();}
     this.position.add(this.velocity);
   };
 
@@ -542,6 +529,18 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     this.position.add(this.velocity);
   };
 
+  this.updateHeading = function() {
+    // To create a spiral effect on when movement is linear (is not called when perlin=true)
+    // Assumes that this.velocity is a unit vector (has only heading, no magnitude)
+    var twist = this.velocity.copy();
+    twist.normalize();
+    var twistAngle = map(this.size, 0, 1, PI/180, 0);
+    if (this.dna.genes[4] >= 0.5) {twistAngle *= -1;}
+    twist.rotate(twistAngle);
+    this.velocity.add(twist);
+    this.velocity.normalize();
+  }
+
   this.checkBoundaryRebound = function() {
     if (this.position.x > width - this.r) {
       this.position.x = width - this.r;
@@ -556,7 +555,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
       this.position.y = this.r;
       this.velocity.y *= -1;
     }
-  };
+  }
 
   this.checkBoundaryWraparound = function() {
     if (this.position.x > width + this.r) {
@@ -568,7 +567,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     } else if (this.position.y < -this.r) {
       this.position.y = height + this.r;
     }
-  };
+  }
 
   // Death
   this.dead = function() {
