@@ -1,19 +1,8 @@
 /*
- * 2016.05.22 12:38
- * New branch: 5_bugfixes
- *
- * Aiming to fix #6, #16, #28, #34, #38 & possibly look over #17
- * #6 Screendump FIXED
- * #16 Wraparound FIXED
- *    Note: 'bounce' is only relevant when perlin = 0.
- *    So: bounce will occur if (!perlin || !wraparound)
- * #28 Spawn velocity FIXED by re-introducing vel in the cell constructor
- * #34 Rotate to heading FIXED by making the velocity variable used in Perlin into a 'this.velocity'
- * #38 Size AND maturity? Are both needed? FIXED. Yes, maturity causes fertile=true when size is constant
- *
- * #17 Sync to processing 'v.Better_code_00_05'
- * New issues opened where relevant, #17 can be closed
- *
+ * 2016.05.23 17:32
+ * New branch: Spiralling_#48
+ * Aiming to fix #42 Spiralling (missing functionality) DONE
+ * Aiming to fix #43 Stepped (missing functionality) DONE
  */
 
 var colony; // A colony object
@@ -203,6 +192,8 @@ var initGUI = function () {
   f6.add(p, 'perlin').name('Perlin');
   f6.add(p, 'spawning').name('Spawning');
   f6.add(p, 'growing').name('Growing');
+  f6.add(p, 'spiralling').name('Spiralling');
+  f6.add(p, 'stepped').name('Stepped');
   f6.add(p, 'coloring').name('Coloring');
   f6.add(p, 'nucleus').name('Show nucleus');
     
@@ -215,7 +206,7 @@ var initGUI = function () {
 
 
 var parameters = function () {
-  this.variance = 1; // Degree of influence from modulators & tweakers (from 0-1 or 0-100%)
+  this.variance = random(1); // Degree of influence from modulators & tweakers (from 0-1 or 0-100%)
   this.colonySize = int(random (5,50)); // Max number of cells in the colony
   //this.colonySize = 1; // Max number of cells in the colony
   this.bkgColHSV = { h: random(360), s: random(), v: random() };
@@ -227,7 +218,7 @@ var parameters = function () {
   this.strokeColHSV = { h: random(360), s: random(), v: random() };
   this.strokeColor = color(this.strokeColHSV.h, this.strokeColHSV.s*100, this.strokeColHSV.v*100); // Cell colour
   //this.strokeAlpha = random(100);
-  this.strokeAlpha = 0;
+  this.strokeAlpha = 100;
   this.lifespan = int(random (100, 5000)); // Max lifespan in #frames
   this.cellStartSize = random(30,150); // Cell radius at spawn
   this.cellEndSize = 10;
@@ -236,15 +227,17 @@ var parameters = function () {
   this.trails = true;
   this.veils = false;
   this.moving = true;
-  this.perlin = true;
+  this.perlin = false;
   this.spawning = true;
   this.growing = true;
+  this.spiralling = true;
+  this.stepped = true;
   this.coloring = true;
   this.fill_HTwist = false;
   this.fill_STwist = false;
   this.fill_BTwist = false;
   this.fill_ATwist = false;
-  this.stroke_HTwist = true;
+  this.stroke_HTwist = false;
   this.stroke_STwist = false;
   this.stroke_BTwist = false;
   this.stroke_ATwist = false;
@@ -374,14 +367,13 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   // 10 = stroke Saturation
   // 11 = stroke Brightness
   // 12 = stroke Alpha
-  // 13 = Ellipse flatness
+  // 13 = Ellipse flatness & spiral handedness
   // 14 = Fertility
 
   // BOOLEAN
   this.fertile = false; // A new cell always starts of infertile
+  this.drawSwitch = false;
   /* e.g
-  * this.spiralling
-  * this.transforming
   * this.stepped
   */
 
@@ -397,14 +389,12 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   this.r = this.cellStartSize; // Initial value for radius
   this.size = map(this.r, this.cellStartSize, this.cellEndSize, 1, 0);
   this.flatness = map(this.dna.genes[13], 0, 1, 1, 1.7); // To make circles into ellipses
-  this.growth = (this.cellStartSize-this.cellEndSize)/p.lifespan;
-  //this.drawStep = this.r * 2 / this.velocity.mag(); // Used in subroutine in display() to draw ellipse at stepped interval
-  this.drawStep = this.r*2; // Alternative calculation (original guess)
+  this.growth = (this.cellStartSize-this.cellEndSize)/p.lifespan; // Should work for both large>small and small>large
+  this.drawStepStart = this.r * p.variance; //Starting value from which drawStep counts down. Could be size * constant?
+  this.drawStep = this.drawStepStart;
 
   // COMMON
-  //this.position = pos.copy(); //cell has position
-  this.position = pos;
-  //this.velocity = p5.Vector.random2D(); //cell has velocity
+  this.position = pos; //cell has position
   this.velocity = vel; //cell has velocity
 
   // PERLIN
@@ -441,12 +431,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   this.run = function() {
     this.live();
-    if (p.moving) {
-      if (p.perlin) {this.movePerlin();} //will become a general 'updatePosition()' encompassing both Linear & Perlin
-      else {this.moveLinear();}
-    }
-    //this.moveLinearStepped();
-    //this.movePerlinStepped();
+    if (p.moving) {this.updatePosition();}
     if (p.growing) {this.updateSize();}
     if (p.spawning) {this.updateFertility();}
     if (p.coloring) {this.updateColor();}
@@ -455,26 +440,29 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     this.display();
     if (p.debugCellText) {this.cellDebuggerText(); }
     if (p.debugCellPrintln) {this.cellDebuggerPrintln(); }
-  };
+  }
 
   this.live = function() {
     this.age += 1;
     this.maturity = map(this.age, 0, this.lifespan, 1, 0);
     this.drawStep--;
-    //if (this.drawStep < 0) {this.drawStep = r*2; }
-    if (this.drawStep < 0) {
-      this.drawStep = this.r * 2 / this.velocity.mag();
-    }
-  };
+    this.drawStepStart = this.r * p.variance ;
+    if (this.drawStep < 0) {drawSwitch = true; this.drawStep = this.drawStepStart;}
+  }
+
+  this.updatePosition = function() {
+    if (p.perlin) {this.movePerlin();}
+      else {this.moveLinear();}
+  }
 
   this.updateSize = function() { //Alternatively: cell is always growing, so include this in 'living' but allow for growth=0 ??
     this.r -= this.growth; // Cell can only shrink for now
     this.size = map(this.r, this.cellStartSize, this.cellEndSize, 1, 0);
-  };
+  }
 
   this.updateFertility = function() {
-    if (this.maturity <= this.fertility) { this.fertile = true; } else {this.fertile = false; } // A cell is fertile if maturity is within limit (a % of lifespan)
-  };
+    if (this.maturity <= this.fertility) {this.fertile = true; } else {this.fertile = false; } // A cell is fertile if maturity is within limit (a % of lifespan)
+  }
 
   this.updateColor = function() {
     /*
@@ -497,7 +485,6 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
       if (this.fill_Htwisted > 360) {this.fill_Htwisted -= 360;}
       this.fillColor = color(this.fill_Htwisted, this.fill_S, this.fill_B); //fill colour is updated with new hue value
     }
-    
     if (p.stroke_STwist) {this.stroke_S = map(this.size, 1, 0, 50, 100); this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B);} // Modulate stroke saturation by radius
     if (p.stroke_BTwist) {this.stroke_B = map(this.size, 1, 0, 50, 100); this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B);} // Modulate stroke brightness by radius
     if (p.stroke_ATwist) {this.strokeAlpha = map(this.size, 1, 0, 0, 100);} // Modulate stroke Alpha by radius
@@ -506,11 +493,11 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
       if (this.stroke_Htwisted > 360) {this.stroke_Htwisted -= 360;}
       this.strokeColor = color(this.stroke_Htwisted, this.stroke_S, this.stroke_B); //stroke colour is updated with new hue value
     }
-    
   }
   
   this.moveLinear = function() {
     // Simple linear movement at constant (initial) velocity
+    if (p.spiralling) {this.updateHeading();}
     this.position.add(this.velocity);
   };
 
@@ -542,6 +529,18 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     this.position.add(this.velocity);
   };
 
+  this.updateHeading = function() {
+    // To create a spiral effect on when movement is linear (is not called when perlin=true)
+    // Assumes that this.velocity is a unit vector (has only heading, no magnitude)
+    var twist = this.velocity.copy();
+    twist.normalize();
+    var twistAngle = map(this.size, 0, 1, PI/180, 0);
+    if (this.dna.genes[4] >= 0.5) {twistAngle *= -1;}
+    twist.rotate(twistAngle);
+    this.velocity.add(twist);
+    this.velocity.normalize();
+  }
+
   this.checkBoundaryRebound = function() {
     if (this.position.x > width - this.r) {
       this.position.x = width - this.r;
@@ -556,7 +555,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
       this.position.y = this.r;
       this.velocity.y *= -1;
     }
-  };
+  }
 
   this.checkBoundaryWraparound = function() {
     if (this.position.x > width + this.r) {
@@ -568,7 +567,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     } else if (this.position.y < -this.r) {
       this.position.y = height + this.r;
     }
-  };
+  }
 
   // Death
   this.dead = function() {
@@ -604,20 +603,29 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     push();
     translate(this.position.x, this.position.y);
     rotate(angle);
-    ellipse(0, 0, this.r, this.r * this.flatness);
-    if (p.nucleus) {
-      if (this.fertile) {
-        fill(0); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
-      }
-      else {
-        fill(255); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
+    if (!p.stepped) {
+      ellipse(0, 0, this.r, this.r * this.flatness);
+      if (p.nucleus) {
+        if (this.fertile) {
+          fill(0); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
+        }
+        else {
+          fill(255); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
+        }
       }
     }
-    /*if (this.drawStep < 1) {
-      fill(0, 80);
-      //stroke(0);
+    else if (this.drawStep < 1) {
       ellipse(0, 0, this.r, this.r*this.flatness);
-    }*/
+      if (p.nucleus) {
+        if (this.fertile) {
+          fill(0); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
+        }
+        else {
+          fill(255); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
+        }
+      }
+      this.drawSwitch = false;
+    }
     pop();
   };
 
