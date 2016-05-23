@@ -1,8 +1,12 @@
 /*
- * 2016.05.23 21:13
+ * 2016.05.23 22:23
  * New branch: GUI_enhancements
- * Aiming to fix #9 Presets in the GUI FIXED
+ * Aiming to fix #9 Presets in the GUI (FIXED)
  * Aiming to fix #8 Randomiser
+ * Have added 'randomisers' to most of the variables in the Parameters object
+ * Now I just need an initialise function that can be called to give a new set of properties
+ * Have made a test using the 'p' key but I don't think this is the right way to do it.
+ * ALSO:
  * Would some GUI elements benefit from text-entry instead of a slider?
  * gui.add(text, 'maxSize').min(0).step(0.25); // Mix and match
  */
@@ -121,6 +125,11 @@ function keyTyped() {
   if (key === 's') {
     screenDump();
   }
+  
+  if (key === 'p') {
+    p = new Parameters();
+    colony.cullAll();
+  }
 }
 
 var initGUI = function () {
@@ -216,35 +225,33 @@ var Parameters = function () {
   this.bkgColor = color(this.bkgColHSV.h, this.bkgColHSV.s*100, this.bkgColHSV.v*100); // Background colour
   this.fillColHSV = { h: random(360), s: random(), v: random() };
   this.fillColor = color(this.fillColHSV.h, this.fillColHSV.s*100, this.fillColHSV.v*100); // Cell colour
-  //this.fillAlpha = random(100);
-  this.fillAlpha = 100;
+  this.fillAlpha = random(100);
   this.strokeColHSV = { h: random(360), s: random(), v: random() };
   this.strokeColor = color(this.strokeColHSV.h, this.strokeColHSV.s*100, this.strokeColHSV.v*100); // Cell colour
-  //this.strokeAlpha = random(100);
-  this.strokeAlpha = 100;
+  this.strokeAlpha = random(100);
   this.lifespan = int(random (100, 5000)); // Max lifespan in #frames
   this.cellStartSize = random(30,150); // Cell radius at spawn
-  this.cellEndSize = 10;
-  this.fertileStart = 0.5;
+  this.cellEndSize = random(0, 25);
+  this.fertileStart = random(1);
   this.wraparound = true;
   this.trails = true;
   this.veils = false;
   this.moving = true;
-  this.perlin = false;
+  if (random(1) > 0.5) {this.perlin = true;} else {this.perlin = false;}
   this.spawning = true;
   this.growing = true;
-  this.spiralling = true;
-  this.stepped = true;
+  if (random(1) > 0.5) {this.spiralling = true;} else {this.spiralling = false;}
+  if (random(1) > 0.7) {this.stepped = true;} else {this.stepped = false;}
   this.coloring = true;
-  this.fill_HTwist = false;
-  this.fill_STwist = false;
-  this.fill_BTwist = false;
-  this.fill_ATwist = false;
-  this.stroke_HTwist = false;
-  this.stroke_STwist = false;
-  this.stroke_BTwist = false;
-  this.stroke_ATwist = false;
-  this.nucleus = false;
+  if (random(1) > 0.5) {this.fill_HTwist = true;} else {this.fill_HTwist = false;}
+  if (random(1) > 0.5) {this.fill_STwist = true;} else {this.fill_STwist = false;}
+  if (random(1) > 0.5) {this.fill_BTwist = true;} else {this.fill_BTwist = false;}
+  if (random(1) > 0.5) {this.fill_ATwist = true;} else {this.fill_ATwist = false;}
+  if (random(1) > 0.5) {this.stroke_HTwist = true;} else {this.stroke_HTwist = false;}
+  if (random(1) > 0.5) {this.stroke_STwist = true;} else {this.stroke_STwist = false;}
+  if (random(1) > 0.5) {this.stroke_BTwist = true;} else {this.stroke_BTwist = false;}
+  if (random(1) > 0.5) {this.stroke_ATwist = true;} else {this.stroke_ATwist = false;}
+  if (random(1) > 0.8) {this.nucleus = true;} else {this.nucleus = false;}
   this.debugMain = false; 
   this.debugCellText = false;
   this.debugCellPrintln = false;
