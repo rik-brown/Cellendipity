@@ -1,8 +1,10 @@
 /*
- * 2016.05.23 17:32
- * New branch: Spiralling_#48
- * Aiming to fix #42 Spiralling (missing functionality) DONE
- * Aiming to fix #43 Stepped (missing functionality) DONE
+ * 2016.05.23 21:13
+ * New branch: GUI_enhancements
+ * Aiming to fix #9 Presets in the GUI FIXED
+ * Aiming to fix #8 Randomiser
+ * Would some GUI elements benefit from text-entry instead of a slider?
+ * gui.add(text, 'maxSize').min(0).step(0.25); // Mix and match
  */
 
 var colony; // A colony object
@@ -13,8 +15,9 @@ function setup() {
   createCanvas(windowWidth, windowHeight - 4);
   smooth();
   ellipseMode(RADIUS);
-  p = new parameters();
+  p = new Parameters();
   gui = new dat.GUI();
+  gui.remember(p);
   initGUI();
   background(p.bkgColor);
   colony = new Colony(p.colonySize, p.cellStartSize);
@@ -205,7 +208,7 @@ var initGUI = function () {
 }
 
 
-var parameters = function () {
+var Parameters = function () {
   this.variance = random(1); // Degree of influence from modulators & tweakers (from 0-1 or 0-100%)
   this.colonySize = int(random (5,50)); // Max number of cells in the colony
   //this.colonySize = 1; // Max number of cells in the colony
