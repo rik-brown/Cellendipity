@@ -6,9 +6,13 @@
  * Have added 'randomisers' to most of the variables in the Parameters object
  * Now I just need an initialise function that can be called to give a new set of properties
  * Have made a test using the 'p' key but I don't think this is the right way to do it.
+ * The parameters are refreshed ok, but the GUI no longer reflects these new values.
+ * Adding an extra initGUI() didn't seem to help
+ * Maybe just using 'f5' to reload the page is good enough?
  * ALSO:
  * Would some GUI elements benefit from text-entry instead of a slider?
  * gui.add(text, 'maxSize').min(0).step(0.25); // Mix and match
+ * 2016.05.24 06:55 Did some tidying
  */
 
 var colony; // A colony object
@@ -31,14 +35,12 @@ function draw() {
   if (!p.trails || p.debugCellText) {background(p.bkgColor);}
   if (p.veils) {veil();} // Draws a near-transparent 'veil' in background colour over the  frame
   colony.run();
-  if (colony.cells.length === 0 && keyIsPressed) { // Repopulate the colony if it suffers an extinction (wait for keypress)
-    //screenDump(); // Press 's' key to save
-    background(p.bkgColor); // Refresh the background
-    populateColony();
-  }
+  if (colony.cells.length === 0 && keyIsPressed) {populateColony(); }
 }
 
 function populateColony() {
+  background(p.bkgColor); // Refresh the background
+  colony.cells = [];
   colony = new Colony(p.colonySize, p.cellStartSize); //Could Colony receive a color-seed value (that is iterated through in a for- loop?) (or randomized?)
  // colony = new Colony(10, cellStartSize); // Populate the colony with a single cell. Useful for debugging
 }
@@ -54,31 +56,16 @@ function veil() {
   fill(255);
 }
 
-// We can add a creature manually if we so desire
 function mousePressed() {
   var mousePos = createVector(mouseX, mouseY);
   var vel = p5.Vector.random2D();
-  if (mousePos.x < width) {
-    if (p.debugMain) {print("xx " + String(mousePos));}
-    if (p.debugMain) {print("yy " + String(p.fillColor));}
-    if (p.debugMain) {print("zz " + String(p.strokeColor));}
-    //println("fillColor: " + p.fillColor + "   fillAlpha: " + p.fillAlpha);
-    //println("strokeColor: " + p.strokeColor + "   strokeAlpha: " + p.strokeAlpha);
-    colony.spawn(mousePos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
-  }
+  if (mousePos.x < width) {colony.spawn(mousePos, vel, p.fillColor, p.strokeColor, p.cellStartSize);}
 }
 
 function mouseDragged() {
   var mousePos = createVector(mouseX, mouseY);
   var vel = p5.Vector.random2D();
-  if (mousePos.x < width) {
-    if (p.debugMain) {print("xx " + String(mousePos));}
-    if (p.debugMain) {print("yy " + String(p.fillColor));}
-    if (p.debugMain) {print("zz " + String(p.strokeColor));}
-    //println("fillColor: " + p.fillColor + "   fillAlpha: " + p.fillAlpha);
-    //println("strokeColor: " + p.strokeColor + "   strokeAlpha: " + p.strokeAlpha);
-    colony.spawn(mousePos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
-  }
+  if (mousePos.x < width) {colony.spawn(mousePos, vel, p.fillColor, p.strokeColor, p.cellStartSize);}
 }
 
 function screenDump() {
@@ -87,31 +74,31 @@ function screenDump() {
 
 function keyTyped() {
   if (key === 'b') {
-    var spawnPos = createVector(random(width), random(height));
+    var pos = createVector(random(width), random(height));
+    var vel = p5.Vector.random2D();
     var FillColor = color(240, 100, 100); //BLUE
     var StrokeColor = color(0, 0, 100);
-    if (p.debugMain) {print(String(FillColor));}
-    colony.spawn(spawnPos, FillColor, StrokeColor, p.cellStartSize);
+    colony.spawn(pos, vel, FillColor, StrokeColor, p.cellStartSize);
   }
   
   if (key === 'g') {
-    var spawnPos = createVector(random(width), random(height));
+    var pos = createVector(random(width), random(height));
+    var vel = p5.Vector.random2D();
     var FillColor = color(120, 100, 100); //GREEN
     var StrokeColor = color(0, 0, 100);
-    if (p.debugMain) {print(String(FillColor));}
-    colony.spawn(spawnPos, FillColor, StrokeColor, p.cellStartSize);
+    colony.spawn(pos, vel, FillColor, StrokeColor, p.cellStartSize);
   }
   
   if (key === 'r') {
-    var spawnPos = createVector(random(width), random(height));
+    var pos = createVector(random(width), random(height));
+    var vel = p5.Vector.random2D();
     var FillColor = color(0, 100, 100); //RED
     var StrokeColor = color(0, 0, 100);
-    if (p.debugMain) {print(String(FillColor));}
-    colony.spawn(spawnPos, FillColor, StrokeColor, p.cellStartSize);
+    colony.spawn(pos, vel, FillColor, StrokeColor, p.cellStartSize);
   }
   
   if (key === 'c') {
-    colony.cullAll();
+    colony.cells = [];
   }
   
   if (key === 'd') {
@@ -128,7 +115,8 @@ function keyTyped() {
   
   if (key === 'p') {
     p = new Parameters();
-    colony.cullAll();
+    initGUI();
+    colony.cells = [];
   }
 }
 
@@ -136,38 +124,22 @@ var initGUI = function () {
 
 // Add the GUI sections
 	var f1 = gui.addFolder('Cells');
-	f1.add(p, 'variance', 0, 1).step(0.01).name('Variance');
+	var controller =f1.add(p, 'variance', 0, 1).step(0.01).name('Variance');
+	controller.onChange(function(value) {populateColony(); });
 	var controller = f1.add(p, 'colonySize', 1, 200).step(1).name('Colony start size');
-	controller.onChange(function(value) {
-	  background(p.bkgColor);
-	  colony.cullAll();
-	  populateColony();
-	});
+	controller.onChange(function(value) {populateColony(); });
 	var controller = f1.add(p, 'cellStartSize', 10, 200).step(1).name('Cell start size');
-	controller.onChange(function(value) {
-	  background(p.bkgColor);
-	  colony.cullAll();
-	  populateColony();
-	});
+	controller.onChange(function(value) { populateColony();});
   var controller = f1.add(p, 'cellEndSize', 1, 50).step(1).name('Cell end size');
-	controller.onChange(function(value) {
-	  background(p.bkgColor);
-	  colony.cullAll();
-	  populateColony();
-	});
+	controller.onChange(function(value) {populateColony(); });
 	var controller = f1.add(p, 'lifespan', 100, 5000).step(10).name('Lifespan');
-	controller.onChange(function(value) {
-	  background(p.bkgColor);
-	  colony.cullAll();
-	  populateColony();
-	});
-	    
+	controller.onChange(function(value) {populateColony(); });
 	var controller = f1.add(p, 'fertileStart', 0, 1).step(0.01).name('Fertile radius%');
-	controller.onChange(function(value) {background(p.bkgColor);});
+	controller.onChange(function(value) {populateColony();});
 	    
 	var f2 = gui.addFolder('Environment');
 	var controller = f2.add(p, 'wraparound').name('Wraparound');
-	controller.onChange(function(value) {background(p.bkgColor);});
+	controller.onChange(function(value) {populateColony();});
 	f2.add(p, 'trails').name('Trails');
 	f2.add(p, 'veils').name('Veils');
 	  
@@ -210,7 +182,6 @@ var initGUI = function () {
   f6.add(p, 'nucleus').name('Show nucleus');
     
   var f7 = gui.addFolder("Debug");
-  f7.add(p, 'debugMain').name('Debug:Main');
   f7.add(p, 'debugCellText').name('Debug:Cell(txt)');
   f7.add(p, 'debugCellPrintln').name('Debug:Cell(print)');
   f7.add(p, 'debugColony').name('Debug:Colony');
@@ -252,7 +223,6 @@ var Parameters = function () {
   if (random(1) > 0.5) {this.stroke_BTwist = true;} else {this.stroke_BTwist = false;}
   if (random(1) > 0.5) {this.stroke_ATwist = true;} else {this.stroke_ATwist = false;}
   if (random(1) > 0.8) {this.nucleus = true;} else {this.nucleus = false;}
-  this.debugMain = false; 
   this.debugCellText = false;
   this.debugCellPrintln = false;
   this.debugColony = false;
@@ -339,12 +309,6 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
     //rect(-1, -1, width+1, height+1);
   };
 
-  this.cullAll = function() { // To remove ALL cells from the colony 
-    for (var i = this.cells.length; i >= 0; i--) {
-      this.cells.splice(i, 1);
-    }
-  };
-
   this.debugTextColony = function() { // For debug only
     fill(0);
     rect(0,0,300,20);
@@ -400,7 +364,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   this.size = map(this.r, this.cellStartSize, this.cellEndSize, 1, 0);
   this.flatness = map(this.dna.genes[13], 0, 1, 1, 1.7); // To make circles into ellipses
   this.growth = (this.cellStartSize-this.cellEndSize)/p.lifespan; // Should work for both large>small and small>large
-  this.drawStepStart = this.r * p.variance; //Starting value from which drawStep counts down. Could be size * constant?
+  this.drawStepStart = (this.r *2 + this.growth) * p.variance ;
   this.drawStep = this.drawStepStart;
 
   // COMMON
@@ -456,7 +420,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     this.age += 1;
     this.maturity = map(this.age, 0, this.lifespan, 1, 0);
     this.drawStep--;
-    this.drawStepStart = this.r * p.variance ;
+    this.drawStepStart = (this.r *2 + this.growth) * p.variance;
     if (this.drawStep < 0) {drawSwitch = true; this.drawStep = this.drawStepStart;}
   }
 
