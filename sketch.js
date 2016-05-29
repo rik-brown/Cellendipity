@@ -1,27 +1,19 @@
 /*
- * 2016.05.23 22:23
- * New branch: GUI_enhancements
- * Aiming to fix #9 Presets in the GUI (FIXED)
- * Aiming to fix #8 Randomiser
- * Have added 'randomisers' to most of the variables in the Parameters object
- * Have also added a randomize() function
- * Have added .listen() to the relevant GUI elements
- * Seems to work OK, but maybe 2 x randomise is overkill?
+ * 2016.05.29 07:52
+ * Issue #8
+ * A slider determines the amount of Noisy vs Linear movement
+ * Strategy: Test using the 'variance' slider
  *
- * ALSO:
- * Would some GUI elements benefit from text-entry instead of a slider?
- * gui.add(text, 'maxSize').min(0).step(0.25); // Mix and match
- * 2016.05.24 06:55 Did some tidying
-
- * Think about the hierachy of the menu - 
-	+ Colour
-	+ Shape
-	+ Growth
-	+ Modulators / Tweakers
-	+ Colony
-	+ Environment
-
-
+ * Boolean 'perlin' is removed. Need to consider implications for boundary checking
+ *
+ * Need to make a slider for 'spiral' - from 0 to 10 * PI & remove toggle
+ * Need to tie this to a DNA for individual variation
+ *
+ * Need to rename 'variance' (or leave it where it is for later & make a new for Noise% in movement)
+ *
+ * Do I prefer sliders in 0-100 (then divide afterwards) or is 0-1 acceptable?
+ *
+ * Do I want noise% to be individually varied? (DNA)
  */
 
 var colony; // A colony object
@@ -199,8 +191,7 @@ var initGUI = function () {
 	  controller.onChange(function(value) {populateColony();});
 	
 	var f6 = gui.addFolder("Movement");
-	  f6.add(p, 'perlin').name('Perlin').listen();
-    f6.add(p, 'spiralling').name('Spiralling').listen();
+	  f6.add(p, 'spiralling').name('Spiralling').listen();
     f6.add(p, 'stepped').name('Stepped').listen();
 	  var controller = f6.add(p, 'wraparound').name('Wraparound');
 	  controller.onChange(function(value) {populateColony();});
@@ -252,7 +243,6 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.lifespan = int(random (100, 5000)); // Max lifespan in #frames
   this.fertileStart = random(1);
   
-  if (random(1) > 0.5) {this.perlin = true;} else {this.perlin = false;}
   if (random(1) > 0.5) {this.spiralling = true;} else {this.spiralling = false;}
   if (random(1) > 0.7) {this.stepped = true;} else {this.stepped = false;}
   this.wraparound = true;
@@ -300,7 +290,6 @@ this.randomize = function() {
   p.lifespan = int(random (100, 5000));
   p.fertileStart = random(1);
 
-  if (random(1) > 0.5) {p.perlin = true;} else {p.perlin = false;}
   if (random(1) > 0.5) {p.spiralling = true;} else {p.spiralling = false;}
   if (random(1) > 0.7) {p.stepped = true;} else {p.stepped = false;}
 }
@@ -406,8 +395,8 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   // 0 = cellStartSize
   // 1 = cellEndSize
   // 2 = lifespan
-  // 3 = step (Perlin)
-  // 4 = vMax (Perlin)
+  // 3 = step (Noise)
+  // 4 = vMax (Noise)
   // 5 = fill Hue
   // 6 = fill Saturation
   // 7 = fill Brightness
@@ -444,10 +433,10 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   // COMMON
   this.position = pos; //cell has position
-  this.velocity = vel; //cell has velocity
+  this.velocityLinear = vel; //cell has velocity
 
-  // PERLIN
-  this.vMax = map(this.dna.genes[4], 0, 1, 0, 4); //Maximum velocity when using movePerlin()
+  // NOISE
+  this.vMax = map(this.dna.genes[4], 0, 1, 0, 4); //Maximum magnitude in noise-
   this.xoff = random(1000); //Seed for noise
   this.yoff = random(1000); //Seed for noise
   this.step = map(this.dna.genes[3], 0, 1, 0.001, 0.006); //Step-size for noise
@@ -481,8 +470,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     if (p.growing) {this.updateSize();}
     if (p.spawning) {this.updateFertility();}
     if (p.coloring) {this.updateColor();}
-    if (p.wraparound) {this.checkBoundaryWraparound();} else if (!p.perlin) {this.checkBoundaryRebound();}
-    // if !wraparound && perlin : cells will be killed if they leave the screen (no bounce for perlin, no offscreen-kill for linear)
+    if (p.wraparound) {this.checkBoundaryWraparound();}
     this.display();
     if (p.debugCellText) {this.cellDebuggerText(); }
     if (p.debugCellPrintln) {this.cellDebuggerPrintln(); }
@@ -497,8 +485,19 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   }
 
   this.updatePosition = function() {
-    if (p.perlin) {this.movePerlin();}
-      else {this.moveLinear();}
+    var vx = map(noise(this.xoff), 0, 1, -this.vMax, this.vMax); // get new vx value from Perlin noise function
+    var vy = map(noise(this.yoff), 0, 1, -this.vMax, this.vMax); // get new vy value from Perlin noise function
+    var velocityNoise = createVector(vx, vy); // create new velocity vector based on new vx, vy components
+    this.xoff += this.step; // increment x offset for next vx value
+    this.yoff += this.step; // increment x offset for next vy value
+    this.velocity = p5.Vector.lerp(this.velocityLinear, velocityNoise, p.variance);
+    if (p.spiralling) {
+      var twistAngle = map(this.size, 0, 1, 0, TWO_PI);
+      if (this.dna.genes[4] >= 0.5) {twistAngle *= -1;}
+      this.velocity.rotate(twistAngle);
+    }
+    //this.velocity.mult(this.r + this.r + this.growth); //OLD CODE (alternative stepping), kept as a reminder
+    this.position.add(this.velocity);
   }
 
   this.updateSize = function() { //Alternatively: cell is always growing, so include this in 'living' but allow for growth=0 ??
@@ -541,42 +540,8 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     }
   }
   
-  this.moveLinear = function() {
-    // Simple linear movement at constant (initial) velocity
-    if (p.spiralling) {this.updateHeading();}
-    this.position.add(this.velocity);
-  };
-
-  this.moveLinearStepped = function() {
-    this.velocity.normalize(); // Convert to a unit-vector (magnitude = 1)
-    this.velocity.mult(this.r + this.r + this.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
-    this.position.add(this.velocity);
-  };
-
-  this.movePerlin = function() {
-    // Simple movement based on perlin noise
-    var vx = map(noise(this.xoff), 0, 1, -this.vMax, this.vMax);
-    var vy = map(noise(this.yoff), 0, 1, -this.vMax, this.vMax);
-    this.velocity = createVector(vx, vy);
-    this.xoff += this.step;
-    this.yoff += this.step;
-    this.position.add(this.velocity);
-  };
-
-  this.movePerlinStepped = function() {
-    // Experimental movement based on perlin noise
-    var vx = map(noise(this.xoff), 0, 1, -this.vMax, this.vMax);
-    var vy = map(noise(this.yoff), 0, 1, -this.vMax, this.vMax);
-    this.velocity = createVector(vx, vy); // The changing angle is already given. It is only the magnitude which needs to be adressed!
-    this.xoff += this.step;
-    this.yoff += this.step;
-    this.velocity.normalize(); // Convert to a unit-vector (magnitude = 1)
-    velocity.mult(this.r + this.r + this.growth); // Set the magnitude to a size which will place the two consecutive circles adjacent to one another.
-    this.position.add(this.velocity);
-  };
-
-  this.updateHeading = function() {
-    // To create a spiral effect on when movement is linear (is not called when perlin=true)
+  this.updateHeading = function() { // REDUNDANT CODE
+    // To create a spiral effect when movement is linear
     // Assumes that this.velocity is a unit vector (has only heading, no magnitude)
     var twist = this.velocity.copy();
     twist.normalize();
@@ -810,19 +775,20 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     //text("this.strokeAlpha:" + this.strokeAlpha, this.position.x, this.position.y + rowHeight*5);
     
     // GROWTH
-    text("size:" + this.size, this.position.x, this.position.y + rowHeight*1);
+    text("size:" + this.size, this.position.x, this.position.y + rowHeight*2);
     //text("growth:" + this.growth, this.position.x, this.position.y + rowHeight*5);
-    text("maturity:" + this.maturity, this.position.x, this.position.y + rowHeight*4);
-    text("lifespan:" + this.lifespan, this.position.x, this.position.y + rowHeight*2);
-    text("age:" + this.age, this.position.x, this.position.y + rowHeight*3);
+    //text("maturity:" + this.maturity, this.position.x, this.position.y + rowHeight*4);
+    //text("lifespan:" + this.lifespan, this.position.x, this.position.y + rowHeight*2);
+    //text("age:" + this.age, this.position.x, this.position.y + rowHeight*3);
     //text("fertility:" + this.fertility, this.position.x, this.position.y + rowHeight*8);
     //text("fertile:" + this.fertile, this.position.x, this.position.y + rowHeight*9);
     //text("collCount:" + this.collCount, this.position.x, this.position.y + rowHeight*3);
     
     // MOVEMENT
-    //text("vel.x:" + this.velocity.x, this.position.x, this.position.y + rowHeight*4);
-    //text("vel.y:" + this.velocity.y, this.position.x, this.position.y + rowHeight*5);
+    text("vel.x:" + this.velocity.x, this.position.x, this.position.y + rowHeight*4);
+    text("vel.y:" + this.velocity.y, this.position.x, this.position.y + rowHeight*5);
     text("vel.heading():" + this.velocity.heading(), this.position.x, this.position.y + rowHeight*0);
+    text("spiralling:" + p.spiralling, this.position.x, this.position.y + rowHeight*1);
   };
 
   this.cellDebuggerPrintln = function() {
