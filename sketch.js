@@ -1,8 +1,9 @@
 /*
- * 2016.05.29 07:52
- * Issue #8
- * A slider determines the amount of Noisy vs Linear movement DONE (noisePercent)
- * Noise% is individually varied by gene[3]
+ * 2016.06.01 23:36
+ * Issue #40 Beating-heart nucleus
+ * I simply want to make the nucleus appear to 'pulse' on and off
+ * I aim to achieve this by drawing it at the 'stepped' interval to begin with
+ * I guess I will need a new option in the GUI
  */
 
 var colony; // A colony object
@@ -580,7 +581,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     rotate(angle);
     if (!p.stepped) {
       ellipse(0, 0, this.r, this.r * this.flatness);
-      if (p.nucleus) {
+      if (p.nucleus && this.drawStep < 1) {
         if (this.fertile) {
           fill(0); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
         }
