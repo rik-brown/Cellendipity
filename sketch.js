@@ -578,7 +578,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     push();
     translate(this.position.x, this.position.y);
     rotate(angle);
-    if /*(!p.stepped) {
+    if (!p.stepped) {
       ellipse(0, 0, this.r, this.r * this.flatness);
       if (p.nucleus) {
         if (this.fertile) {
@@ -589,7 +589,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
         }
       }
     }
-    else if*/ (this.drawStep < 1) {
+    else if (this.drawStep < 1) {
       ellipse(0, 0, this.r, this.r*this.flatness);
       if (p.nucleus) {
         if (this.fertile) {
