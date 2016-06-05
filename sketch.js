@@ -198,7 +198,8 @@ var initGUI = function () {
 	  f5.add(p, 'spiral', 0, 10).step(0.1).name('Screw').listen();
 	  var controller =f5.add(p, 'stepSize', 0, 100).name('Step size').listen();
 	    controller.onChange(function(value) {if (p.stepSize==0) {p.stepped=false} else {p.stepped=true};});
-    var controller =f5.add(p, 'wraparound').name('Wraparound');
+	  var controller =f5.add(p, 'stepSizNe', 0, 100).name('Step size Nucleus').listen();
+	  var controller =f5.add(p, 'wraparound').name('Wraparound');
 	    controller.onChange(function(value) {populateColony();});
 	  
 	var f6 = gui.addFolder("Options");
@@ -248,6 +249,7 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.noisePercent = random(100); // Percentage of velocity coming from noise-calculation
   this.spiral = random(2); // Number of full (TWO_PI) rotations the velocity heading will turn through during lifespan
   this.stepSize = 0; 
+  this.stepSizeN = 50;
   this.stepped = false;
   this.wraparound = true;
   
@@ -294,8 +296,9 @@ this.randomize = function() {
 
   p.noisePercent = random(100); // Percentage of velocity coming from noise-calculation
   p.spiral = random(10); // Number of full (TWO_PI) rotations the velocity heading will turn through during lifespan
-  p.stepSize = random(50);
+  p.stepSize = random(100);
   if (p.stepSize==0) {p.stepped=false} else {p.stepped=true}
+  p.stepSizeN = random(50);
 }
 
 /* ------------------------------------------------------------------------------------------------------------- */
@@ -424,7 +427,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   this.growth = (this.cellStartSize-this.cellEndSize)/p.lifespan; // Should work for both large>small and small>large
   this.drawStepStart = (this.r *2 + this.growth) * p.stepSize/100;
   this.drawStep = this.drawStepStart;
-  this.drawStepNStart = sqrt(this.r);
+  this.drawStepNStart = sqrt(this.r) * p.stepSizeN/2;
   this.drawStepN = this.drawStepNStart;
 
   // MOVEMENT
@@ -473,7 +476,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     this.drawStep--;
     this.drawStepN--;
     this.drawStepStart = (this.r *2 + this.growth) * p.stepSize/100;
-    this.drawStepNStart = sqrt(this.r);
+    this.drawStepNStart = sqrt(this.r)* p.stepSizeN/2;
     if (this.drawStep < 0) {this.drawStep = this.drawStepStart;}
     if (this.drawStepN < 0) {this.drawStepN = this.drawStepNStart;}
   }
