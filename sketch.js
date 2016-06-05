@@ -4,6 +4,17 @@
  * I simply want to make the nucleus appear to 'pulse' on and off
  * I aim to achieve this by drawing it at the 'stepped' interval to begin with
  * I guess I will need a new option in the GUI
+ 
+ RULES:
+ Never draw nucleus unless you are drawing a cell (though cell can be drawn invisible)
+ 
+ display()
+ displayCell()
+ if (nucleus) {displayNucleus();}
+ 
+ 
+ 
+ 
  */
 
 var colony; // A colony object
@@ -579,9 +590,9 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     push();
     translate(this.position.x, this.position.y);
     rotate(angle);
-    if (!p.stepped) {
+    /*if (!p.stepped) {
       ellipse(0, 0, this.r, this.r * this.flatness);
-      if (p.nucleus && this.drawStep < 1) {
+      if (p.nucleus) {
         if (this.fertile) {
           fill(0); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
         }
@@ -590,7 +601,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
         }
       }
     }
-    else if (this.drawStep < 1) {
+    else*/ if (this.drawStep < 1) {
       ellipse(0, 0, this.r, this.r*this.flatness);
       if (p.nucleus) {
         if (this.fertile) {
