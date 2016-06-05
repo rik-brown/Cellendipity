@@ -1,8 +1,20 @@
 /*
- * 2016.05.29 07:52
- * Issue #8
- * A slider determines the amount of Noisy vs Linear movement DONE (noisePercent)
- * Noise% is individually varied by gene[3]
+ * 2016.06.01 23:36
+ * Issue #40 Beating-heart nucleus
+ * I simply want to make the nucleus appear to 'pulse' on and off
+ * I aim to achieve this by drawing it at the 'stepped' interval to begin with
+ * I guess I will need a new option in the GUI
+ 
+ RULES:
+ Never draw nucleus unless you are drawing a cell (though cell can be drawn invisible)
+ 
+ display()
+ displayCell()
+ if (nucleus) {displayNucleus();}
+ 
+ 
+ 
+ 
  */
 
 var colony; // A colony object
@@ -396,7 +408,6 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   // BOOLEAN
   this.fertile = false; // A new cell always starts of infertile
-  this.drawSwitch = false;
 
   // GROWTH & REPRODUCTION
   this.age = 0; // Age is 'number of frames since birth'. A new cell always starts with age = 0. What is it used for?
@@ -413,6 +424,8 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   this.growth = (this.cellStartSize-this.cellEndSize)/p.lifespan; // Should work for both large>small and small>large
   this.drawStepStart = (this.r *2 + this.growth) * p.stepSize/100;
   this.drawStep = this.drawStepStart;
+  this.drawStepNStart = sqrt(this.r);
+  this.drawStepN = this.drawStepNStart;
 
   // MOVEMENT
   this.position = pos; //cell has position
@@ -458,8 +471,11 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     this.age += 1;
     this.maturity = map(this.age, 0, this.lifespan, 1, 0);
     this.drawStep--;
+    this.drawStepN--;
     this.drawStepStart = (this.r *2 + this.growth) * p.stepSize/100;
-    if (this.drawStep < 0) {drawSwitch = true; this.drawStep = this.drawStepStart;}
+    this.drawStepNStart = sqrt(this.r);
+    if (this.drawStep < 0) {this.drawStep = this.drawStepStart;}
+    if (this.drawStepN < 0) {this.drawStepN = this.drawStepNStart;}
   }
 
   this.updatePosition = function() {
@@ -578,9 +594,9 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     push();
     translate(this.position.x, this.position.y);
     rotate(angle);
-    if (!p.stepped) {
+    if (!p.stepped) { // No step-counter for Cell
       ellipse(0, 0, this.r, this.r * this.flatness);
-      if (p.nucleus) {
+      if (p.nucleus && this.drawStepN < 1) {
         if (this.fertile) {
           fill(0); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
         }
@@ -589,9 +605,9 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
         }
       }
     }
-    else if (this.drawStep < 1) {
+    else if (this.drawStep < 1) { // stepped=true, step-counter is active for cell, draw only when counter=0
       ellipse(0, 0, this.r, this.r*this.flatness);
-      if (p.nucleus) {
+      if (p.nucleus && this.drawStepN < 1) { // Nucleus is always drawn when cell is drawn (no step-counter for nucleus)
         if (this.fertile) {
           fill(0); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
         }
@@ -599,7 +615,6 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
           fill(255); ellipse(0, 0, this.cellEndSize, this.cellEndSize * this.flatness);
         }
       }
-      this.drawSwitch = false;
     }
     pop();
   };
