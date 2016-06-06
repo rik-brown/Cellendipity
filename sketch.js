@@ -198,7 +198,7 @@ var initGUI = function () {
 	f5.add(p, 'spiral', 0, 10).step(0.1).name('Screw').listen();
 	var controller =f5.add(p, 'stepSize', 0, 100).name('Step size').listen();
 	    controller.onChange(function(value) {if (p.stepSize==0) {p.stepped=false} else {p.stepped=true};});
-	var controller =f5.add(p, 'stepSizN', 0, 100).name('Step size Nucleus').listen();
+	var controller =f5.add(p, 'stepSizeN', 0, 100).name('Step size Nucleus').listen();
 	var controller =f5.add(p, 'wraparound').name('Wraparound');
 	    controller.onChange(function(value) {populateColony();});
 	  
