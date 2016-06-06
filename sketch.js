@@ -204,7 +204,7 @@ var initGUI = function () {
 	  
 	var f6 = gui.addFolder("Options");
 	  f6.add(p, 'growing').name('Growing');
-    f6.add(p, 'spawning').name('Reproducing');
+	f6.add(p, 'spawning').name('Reproducing');
     f6.add(p, 'coloring').name('Coloring');
     f6.add(p, 'veils').name('Trails (short)');
     f6.add(p, 'trails').name('Trails (long)');
@@ -425,10 +425,8 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   this.size = map(this.r, this.cellStartSize, this.cellEndSize, 1, 0);
   this.flatness = (p.flatness/100 * map(this.dna.genes[13], 0, 1, 0.8, 1.2)) +1 ; // To make circles into ellipses
   this.growth = (this.cellStartSize-this.cellEndSize)/p.lifespan; // Should work for both large>small and small>large
-  this.drawStepStart = (this.r *2 + this.growth) * p.stepSize/100;
-  this.drawStep = this.drawStepStart;
-  this.drawStepNStart = sqrt(this.r) * p.stepSizeN/2;
-  this.drawStepN = this.drawStepNStart;
+  this.drawStep = 1;
+  this.drawStepN = 1;
 
   // MOVEMENT
   this.position = pos; //cell has position
@@ -474,10 +472,11 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     this.age += 1;
     this.maturity = map(this.age, 0, this.lifespan, 1, 0);
     this.drawStep--;
-    this.drawStepStart = (this.r *2 + this.growth) * p.stepSize/100;
+    //this.drawStepStart = (this.r *2 + this.growth) * p.stepSize/100;
+	this.drawStepStart = map(p.stepSize, 0, 100, 0 , (this.r *2 + this.growth));
     if (this.drawStep < 0) {this.drawStep = this.drawStepStart;}
     this.drawStepN--;
-    this.drawStepNStart = sqrt(this.r)* p.stepSizeN/2;
+    this.drawStepNStart = map(p.stepSizeN, 0, 100, 0 , this.r *2);
     if (this.drawStepN < 0) {this.drawStepN = this.drawStepNStart;}
   }
 
