@@ -194,12 +194,12 @@ var initGUI = function () {
 	  f4.add(p, 'nucleus').name('Nucleus').listen();
 	
 	var f5 = gui.addFolder("Movement");
-    f5.add(p, 'noisePercent', 0, 100).step(1).name('Noise%').listen();
-	  f5.add(p, 'spiral', 0, 10).step(0.1).name('Screw').listen();
-	  var controller =f5.add(p, 'stepSize', 0, 100).name('Step size').listen();
+        f5.add(p, 'noisePercent', 0, 100).step(1).name('Noise%').listen();
+	f5.add(p, 'spiral', 0, 10).step(0.1).name('Screw').listen();
+	var controller =f5.add(p, 'stepSize', 0, 100).name('Step size').listen();
 	    controller.onChange(function(value) {if (p.stepSize==0) {p.stepped=false} else {p.stepped=true};});
-	  var controller =f5.add(p, 'stepSizNe', 0, 100).name('Step size Nucleus').listen();
-	  var controller =f5.add(p, 'wraparound').name('Wraparound');
+	var controller =f5.add(p, 'stepSizN', 0, 100).name('Step size Nucleus').listen();
+	var controller =f5.add(p, 'wraparound').name('Wraparound');
 	    controller.onChange(function(value) {populateColony();});
 	  
 	var f6 = gui.addFolder("Options");
