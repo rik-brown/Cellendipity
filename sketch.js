@@ -249,7 +249,7 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.noisePercent = random(100); // Percentage of velocity coming from noise-calculation
   this.spiral = random(2); // Number of full (TWO_PI) rotations the velocity heading will turn through during lifespan
   this.stepSize = 0; 
-  this.stepSizeN = 50;
+  this.stepSizeN = 10;
   this.stepped = false;
   this.wraparound = true;
   
@@ -474,10 +474,10 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     this.age += 1;
     this.maturity = map(this.age, 0, this.lifespan, 1, 0);
     this.drawStep--;
-    this.drawStepN--;
     this.drawStepStart = (this.r *2 + this.growth) * p.stepSize/100;
-    this.drawStepNStart = sqrt(this.r)* p.stepSizeN/2;
     if (this.drawStep < 0) {this.drawStep = this.drawStepStart;}
+    this.drawStepN--;
+    this.drawStepNStart = sqrt(this.r)* p.stepSizeN/2;
     if (this.drawStepN < 0) {this.drawStepN = this.drawStepNStart;}
   }
 
