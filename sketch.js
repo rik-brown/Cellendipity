@@ -1,20 +1,5 @@
 /*
- * 2016.06.01 23:36
- * Issue #40 Beating-heart nucleus
- * I simply want to make the nucleus appear to 'pulse' on and off
- * I aim to achieve this by drawing it at the 'stepped' interval to begin with
- * I guess I will need a new option in the GUI
- 
- RULES:
- Never draw nucleus unless you are drawing a cell (though cell can be drawn invisible)
- 
- display()
- displayCell()
- if (nucleus) {displayNucleus();}
- 
- 
- 
- 
+ * Working Title: Aybe Sea
  */
 
 var colony; // A colony object
@@ -35,7 +20,7 @@ function setup() {
 
 function draw() {
   if (!p.trails || p.debugCell) {background(p.bkgColor);}
-  if (p.veils) {veil();} // Draws a near-transparent 'veil' in background colour over the  frame
+  if (p.veils) {veil();} // Draws a near-transparent 'veil' in background colour over the frame
   colony.run();
   if (colony.cells.length === 0 && keyIsPressed) {populateColony(); }
 }
@@ -312,8 +297,7 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
 
   // VARIABLES
 
-  var colonyMin = 10;
-  var colonyMax = 500;
+  var colonyMaxSize = 500;
   var colRand = random(-PI, PI);
   
   // Create initial population of cells  
@@ -350,7 +334,7 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
       }
 
       // Iteration to check collision between current cell(i) and the rest
-      if (this.cells.length <= colonyMax) { // Don't check for collisons if there are too many cells (wait until some die off)
+      if (this.cells.length <= colonyMaxSize) { // Don't check for collisons if there are too many cells (wait until some die off)
         for (var others = i - 1; others >= 0; others--) { // Since main iteration (i) goes backwards, this one needs to too
           var other = this.cells[others]; // Get the other cells, one by one
           if (c.age > 20 && other.age > 20) {
@@ -361,8 +345,8 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
     }
 
     // If there are too many cells, remove some by 'culling' (not actually active now, functional code is commented out)
-    if (this.cells.length > colonyMax) {
-      this.cull(colonyMax);
+    if (this.cells.length > colonyMaxSize) {
+      this.cull(colonyMaxSize);
     }
   };
 
@@ -379,7 +363,7 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
     rect(0,0,300,20);
     fill(360, 100);
     textSize(16);
-    text("Nr. cells: " + this.cells.length + " MinLimit:" + colonyMin + " MaxLimit:" + colonyMax, 10, 20);
+    text("Nr. cells: " + this.cells.length + " MaxLimit:" + colonyMaxSize, 10, 20);
   };
 }
 
