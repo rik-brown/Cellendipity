@@ -1,5 +1,7 @@
 /*
  * Working Title: Aybe Sea
+ *
+ * #80 Prevent spawn from mousePressed in GUI
  */
 
 var colony; // A colony object
@@ -45,13 +47,13 @@ function veil() {
 function mousePressed() {
   var mousePos = createVector(mouseX, mouseY);
   var vel = p5.Vector.random2D();
-  if (mousePos.x < width) {colony.spawn(mousePos, vel, p.fillColor, p.strokeColor, p.cellStartSize);}
+  if (mousePos.x < (width-260)) {colony.spawn(mousePos, vel, p.fillColor, p.strokeColor, p.cellStartSize);}
 }
 
 function mouseDragged() {
   var mousePos = createVector(mouseX, mouseY);
   var vel = p5.Vector.random2D();
-  if (mousePos.x < width) {colony.spawn(mousePos, vel, p.fillColor, p.strokeColor, p.cellStartSize);}
+  if (mousePos.x < (width-260)) {colony.spawn(mousePos, vel, p.fillColor, p.strokeColor, p.cellStartSize);}
 }
 
 function screenDump() {
