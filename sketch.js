@@ -169,16 +169,17 @@ var initGUI = function () {
     f3.add(p, 'stroke_ATwist').name('Line Transp.').listen(); 
 	
 	var f4 = gui.addFolder("Shape");
-	  var controller = f4.add(p, 'cellStartSize', 10, 200).step(1).name('Size (start)').listen();
-	    controller.onChange(function(value) {populateColony();});
-    var controller = f4.add(p, 'cellEndSize', 0.5, 50).step(0.5).name('Size (end)').listen();
-	    controller.onChange(function(value) {populateColony(); });
-	  var controller = f4.add(p, 'lifespan', 100, 5000).step(10).name('Lifespan').listen();
-	    controller.onChange(function(value) {populateColony(); });
-	  var controller = f4.add(p, 'fertileStart', 0, 100).name('Fertility').listen();
-	    controller.onChange(function(value) {populateColony();});
-	  f4.add(p, 'flatness', 0, 100).name('Flatness').listen();
-	  f4.add(p, 'nucleus').name('Nucleus').listen();
+		var controller = f4.add(p, 'cellStartSize', 10, 200).step(1).name('Size (start)').listen();
+		controller.onChange(function(value) {populateColony();});
+		var controller = f4.add(p, 'cellEndSize', 0.5, 50).step(0.5).name('Size (end)').listen();
+		controller.onChange(function(value) {populateColony(); });
+		var controller = f4.add(p, 'lifespan', 100, 5000).step(10).name('Lifespan').listen();
+		controller.onChange(function(value) {populateColony(); });
+		var controller = f4.add(p, 'fertileStart', 0, 100).name('Fertility').listen();
+		controller.onChange(function(value) {populateColony();});
+		f4.add(p, 'spawnLimit').name('Spawn Limit');
+		f4.add(p, 'flatness', 0, 100).name('Flatness').listen();
+		f4.add(p, 'nucleus').name('Nucleus').listen();
 	
 	var f5 = gui.addFolder("Movement");
         f5.add(p, 'noisePercent', 0, 100).step(1).name('Noise%').listen();
@@ -230,6 +231,7 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.cellEndSize = random(0, 10);
   this.lifespan = int(random (100, 5000)); // Max lifespan in #frames
   this.fertileStart = random(100);
+  this.spawnLimit = random(10);
   this.flatness = random(0, 50); // Amount of flatness (from circle to ellipse)
   if (random(1) > 0.8) {this.nucleus = true;} else {this.nucleus = false;}
   
@@ -278,6 +280,7 @@ this.randomize = function() {
   p.cellEndSize = random(0, 25);
   p.lifespan = int(random (100, 5000));
   p.fertileStart = random(100);
+  p.spawnLimit = random(10);
   p.flatness = random(100);
   if (random(1) > 0.7) {p.nucleus = true;} else {p.nucleus = false;}
 
@@ -400,9 +403,9 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   // GROWTH & REPRODUCTION
   this.age = 0; // Age is 'number of frames since birth'. A new cell always starts with age = 0. What is it used for?
-  this.lifespan = p.lifespan * map(this.dna.genes[2], 0, 1, 0.8, 1.2); // Fertility can be lowered by DNA but not increased
+  this.lifespan = p.lifespan * map(this.dna.genes[2], 0, 1, 0.8, 1.2); // Lifespan can be lowered by DNA but not increased
   this.fertility = p.fertileStart/100 * map(this.dna.genes[14], 0, 1, 0.7, 1.0); // Fertility can be lowered by DNA but not increased
-  this.collCount = 3; // Number of collisions before DEATH
+  this.spawnCount = int(p.spawnLimit); // Max. number of spawns 
   
   // SIZE AND SHAPE
   this.cellStartSize = cellStartSize_ * map(this.dna.genes[1], 0, 1, 0.8, 1.0); // Note: If last value in map() is >1 then new cells may be larger than their parents
@@ -487,6 +490,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   this.updateFertility = function() {
     if (this.maturity <= this.fertility) {this.fertile = true; } else {this.fertile = false; } // A cell is fertile if maturity is within limit (a % of lifespan)
+    if (this.spawnCount == 0) {this.fertility = 0;} // Once spawnCount has counted down to zero, the cell will spawn no more
   }
 
   this.updateColor = function() {
@@ -550,7 +554,6 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   // Death
   this.dead = function() {
-    //if (this.collCount <= 0) {return true; } // not currently in use
     if (this.size <= 0) {return true;} // Size = 0 when r = cellEndSize
     if (this.age >= this.lifespan) {return true;} // Death by old age (regardless of size, which may remain constant)
     if (this.position.x > width + this.r || this.position.x < -this.r || this.position.y > height + this.r || this.position.y < -this.r) {return true;} // Death if move beyond canvas boundary
@@ -686,9 +689,9 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   
 
   this.conception = function(other, distVect) {
-    // Decrease collision counters. NOTE Only done on spawn, so is more like a 'spawn limit'
-    this.collCount--;
-    other.collCount--;
+    // Decrease spawn counters.
+    this.spawnCount--;
+    other.spawnCount--;
 
     // Calculate position for spawn based on PVector between cell & other (leaving 'distVect' unchanged, as it is needed later)
     this.spawnPos = distVect.copy(); // Create spawnPos as a copy of the (already available) distVect which points from parent cell to other
@@ -742,16 +745,16 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     //text("maturity:" + this.maturity, this.position.x, this.position.y + rowHeight*4);
     //text("lifespan:" + this.lifespan, this.position.x, this.position.y + rowHeight*2);
     //text("age:" + this.age, this.position.x, this.position.y + rowHeight*3);
-    //text("fertility:" + this.fertility, this.position.x, this.position.y + rowHeight*8);
-    //text("fertile:" + this.fertile, this.position.x, this.position.y + rowHeight*9);
-    //text("collCount:" + this.collCount, this.position.x, this.position.y + rowHeight*3);
+    text("fertility:" + this.fertility, this.position.x, this.position.y + rowHeight*1);
+    text("fertile:" + this.fertile, this.position.x, this.position.y + rowHeight*2);
+    text("spawnCount:" + this.spawnCount, this.position.x, this.position.y + rowHeight*3);
     
     // MOVEMENT
-    text("vel.x:" + this.velocity.x, this.position.x, this.position.y + rowHeight*4);
-    text("vel.y:" + this.velocity.y, this.position.x, this.position.y + rowHeight*5);
-    text("vel.heading():" + this.velocity.heading(), this.position.x, this.position.y + rowHeight*3);
-    text("Noise%:" + p.noisePercent, this.position.x, this.position.y + rowHeight*1);
-    text("screw amount:" + p.spiral, this.position.x, this.position.y + rowHeight*2);
+    //text("vel.x:" + this.velocity.x, this.position.x, this.position.y + rowHeight*4);
+    //text("vel.y:" + this.velocity.y, this.position.x, this.position.y + rowHeight*5);
+    //text("vel.heading():" + this.velocity.heading(), this.position.x, this.position.y + rowHeight*3);
+    //text("Noise%:" + p.noisePercent, this.position.x, this.position.y + rowHeight*1);
+    //text("screw amount:" + p.spiral, this.position.x, this.position.y + rowHeight*2);
   }
 
 }
