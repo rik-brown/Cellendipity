@@ -63,7 +63,7 @@ function screenDump() {
 function keyTyped() {
 
   if (key === '1') { // spawn RED
-    var pos = createVector(random(width), random(height));
+    if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
     var FillColor = color(0, 100, 100); //RED
     var StrokeColor = color(0, 0, 100);
@@ -71,7 +71,7 @@ function keyTyped() {
   }
   
   if (key === '2') { // spawn YELLOW
-    var pos = createVector(random(width), random(height));
+    if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
     var FillColor = color(60, 100, 100); //RED
     var StrokeColor = color(0, 0, 100);
@@ -79,7 +79,7 @@ function keyTyped() {
   }
 
   if (key === '3') { // spawn GREEN
-    var pos = createVector(random(width), random(height));
+    if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
     var FillColor = color(120, 100, 100); //GREEN
     var StrokeColor = color(0, 0, 100);
@@ -87,7 +87,7 @@ function keyTyped() {
   }
   
   if (key === '4') { // spawn CYAN
-    var pos = createVector(random(width), random(height));
+    if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
     var FillColor = color(180, 100, 100); //GREEN
     var StrokeColor = color(0, 0, 100);
@@ -95,7 +95,7 @@ function keyTyped() {
   }
   
   if (key === '5') { //spawn BLUE
-    var pos = createVector(random(width), random(height));
+    if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
     var FillColor = color(240, 100, 100); //BLUE
     var StrokeColor = color(0, 0, 100);
@@ -103,7 +103,7 @@ function keyTyped() {
   }
   
   if (key === '6') { //spawn VIOLET
-    var pos = createVector(random(width), random(height));
+    if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
     var FillColor = color(300, 100, 100); //BLUE
     var StrokeColor = color(0, 0, 100);
