@@ -1,7 +1,7 @@
 /*
  * Working Title: Aybe Sea
  *
- * #80 Prevent spawn from mousePressed in GUI
+ * #7 Toggle for auto-repopulate
  */
 
 var colony; // A colony object
@@ -24,7 +24,7 @@ function draw() {
   if (!p.trails || p.debugCell) {background(p.bkgColor);}
   if (p.veils) {veil();} // Draws a near-transparent 'veil' in background colour over the frame
   colony.run();
-  if (colony.cells.length === 0 && keyIsPressed) {populateColony(); }
+  if (colony.cells.length === 0) { if (keyIsPressed || p.autoRestart) {populateColony(); } }
 }
 
 function populateColony() {
@@ -140,10 +140,11 @@ function keyTyped() {
 var initGUI = function () {
 
 	var f1 = gui.addFolder('Population');
-	  var controller = f1.add(p, 'colonySize', 1, 200).step(1).name('Size (start)').listen();
-	    controller.onChange(function(value) {populateColony(); });
-    var controller = f1.add(p, 'centerSpawn').name('Centered').listen();
-	    controller.onChange(function(value) {populateColony(); });
+		var controller = f1.add(p, 'colonySize', 1, 200).step(1).name('Size (start)').listen();
+		controller.onChange(function(value) {populateColony(); });
+		var controller = f1.add(p, 'centerSpawn').name('Centered').listen();
+		controller.onChange(function(value) {populateColony(); });
+		f1.add(p, 'autoRestart').name('Auto-restart');
 	 
 	var f2 = gui.addFolder('Colour');
 	  var controller = f2.addColor(p, 'bkgColHSV').name('Background').listen();
@@ -206,6 +207,7 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.colonySize = int(random (3,50)); // Max number of cells in the colony
   //this.colonySize = 1; // Max number of cells in the colony
   this.centerSpawn = false; // true=initial spawn is width/2, height/2 false=random
+  this.autoRestart = false; // If true, will not wait for keypress before starting anew
 
   this.bkgColHSV = { h: random(360), s: random(), v: random() };
   this.bkgColor = color(this.bkgColHSV.h, this.bkgColHSV.s*100, this.bkgColHSV.v*100); // Background colour
