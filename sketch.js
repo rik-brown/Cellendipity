@@ -1,7 +1,6 @@
 /*
  * Working Title: Aybe Sea
  *
- * #7 Toggle for auto-repopulate
  */
 
 var colony; // A colony object
@@ -23,7 +22,9 @@ function setup() {
 function draw() {
   if (!p.trails || p.debugCell) {background(p.bkgColor);}
   if (p.veils) {veil();} // Draws a near-transparent 'veil' in background colour over the frame
-  colony.run();
+  if (!p.paused) {colony.run();}
+  if (p.paused && mouseIsPressed) {colony.run();}
+  if (p.paused && keyIsPressed) {colony.run();}
   if (colony.cells.length === 0) { if (keyIsPressed || p.autoRestart) {populateColony(); } }
 }
 
@@ -110,27 +111,31 @@ function keyTyped() {
     colony.spawn(pos, vel, FillColor, StrokeColor, p.cellStartSize);
   }
   
-  if (key === ' ') { //spacebar
+  if (key === ' ') { //spacebar respawns with current settings
     colony.cells = [];
   }
   
-  if (key === 'c') {
+  if (key === 'p') { // P toggles 'paused' mode
+    p.paused = !p.paused;
+  }
+  
+  if (key === 'c') { // C toggles 'centered' mode
     p.centerSpawn = !p.centerSpawn;
   }
   
-  if (key === 'd') {
+  if (key === 'd') { // D toggles 'cell debug' mode
     p.debugCell = !p.debugCell;
   }
   
-  if (key === 'n') {
+  if (key === 'n') { // N toggles 'show nucleus' mode
     p.nucleus = !p.nucleus;
   }
   
-  if (key === 's') {
+  if (key === 's') { // S saves a screenshot
     screenDump();
   }
   
-  if (key === 'r') {
+  if (key === 'r') { // R for Randomize
     randomize();
     colony.cells = [];
   }
@@ -145,6 +150,7 @@ var initGUI = function () {
 		var controller = f1.add(p, 'centerSpawn').name('Centered').listen();
 		controller.onChange(function(value) {populateColony(); });
 		f1.add(p, 'autoRestart').name('Auto-restart');
+		f1.add(p, 'paused').name('Pause').listen();
 	 
 	var f2 = gui.addFolder('Colour');
 	  var controller = f2.addColor(p, 'bkgColHSV').name('Background').listen();
@@ -208,6 +214,7 @@ var Parameters = function () { //These are the initial values, not the randomise
   //this.colonySize = 1; // Max number of cells in the colony
   this.centerSpawn = false; // true=initial spawn is width/2, height/2 false=random
   this.autoRestart = false; // If true, will not wait for keypress before starting anew
+  this.paused = false; // If true, draw will not advance unless mouseIsPressed
 
   this.bkgColHSV = { h: random(360), s: random(), v: random() };
   this.bkgColor = color(this.bkgColHSV.h, this.bkgColHSV.s*100, this.bkgColHSV.v*100); // Background colour
@@ -370,7 +377,7 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
     rect(0,0,300,20);
     fill(360, 100);
     textSize(16);
-    text("Nr. cells: " + this.cells.length + " MaxLimit:" + colonyMaxSize, 10, 20);
+    text("Nr. cells: " + this.cells.length + " MaxLimit:" + colonyMaxSize + " Paused: " + p.paused, 10, 20);
   };
 }
 
