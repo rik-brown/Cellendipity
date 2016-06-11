@@ -1,8 +1,5 @@
 /*
- *
  * Working Title: Tentaculor
- *
- * Working on #27 with a goal to rework test for collision (possibly losing change in direction)
  */
 
 var colony; // A colony object
@@ -203,8 +200,7 @@ var initGUI = function () {
 
 	var f6 = gui.addFolder("Options");
 	  f6.add(p, 'growing').name('Growing');
-    f6.add(p, 'bouncing').name('Bouncing');
-	  f6.add(p, 'coloring').name('Coloring');
+    f6.add(p, 'coloring').name('Coloring');
     f6.add(p, 'veils').name('Trails (short)');
     f6.add(p, 'trails').name('Trails (long)');
 }
@@ -253,7 +249,6 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.wraparound = true;
 
   this.growing = true;
-  this.bouncing = false;
   this.coloring = true;
   this.veils = false;
   this.trails = true;
@@ -619,68 +614,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   this.checkCollision = function(other) { // Method receives a Cell object 'other' to get the required info about the collidee
     var distVect = p5.Vector.sub(other.position, this.position); // Static vector to get distance between the cell & other
     var distMag = distVect.mag(); // calculate magnitude of the vector separating the balls
-    if (distMag < (this.r + other.r)) { // Test to see if a collision has occurred : is distance < sum of cell radius + other cell radius?
-      this.conception(other, distVect); // Spawn a new cell
-      if (p.bouncing) {
-        // get angle of distVect
-        var theta = distVect.heading();
-        // precalculate trig values
-        var sine = sin(theta);
-        var cosine = cos(theta);
-
-        // posTemp will hold rotated cell positions. You just need to worry about posTemp[1] position
-        var posTemp = [new p5.Vector(), new p5.Vector()];
-
-        // this ball's position is relative to the other so you can use the vector between them (distVect) as the reference point in the rotation expressions.
-        // posTemp[0].position.x and posTemp[0].position.y will initialize automatically to 0.0, which is what you want since b[1] will rotate around b[0]
-        posTemp[1].x = cosine * distVect.x + sine * distVect.y;
-        posTemp[1].y = cosine * distVect.y - sine * distVect.x;
-
-        // rotate Temporary velocities
-        var vTemp = [new p5.Vector(), new p5.Vector()];
-
-        vTemp[0].x = cosine * this.velocity.x + sine * this.velocity.y;
-        vTemp[0].y = cosine * this.velocity.y - sine * this.velocity.x;
-        vTemp[1].x = cosine * other.velocity.x + sine * other.velocity.y;
-        vTemp[1].y = cosine * other.velocity.y - sine * other.velocity.x;
-
-        /* Now that velocities are rotated, you can use 1D conservation of momentum equations to calculate the final velocity along the x-axis. */
-        var vFinal = [new p5.Vector(), new p5.Vector()];
-
-        // final rotated velocity for b[0]
-        vFinal[0].x = ((this.m - other.m) * vTemp[0].x + 2 * other.m * vTemp[1].x) / (this.m + other.m);
-        vFinal[0].y = vTemp[0].y;
-
-        // final rotated velocity for b[0]
-        vFinal[1].x = ((other.m - this.m) * vTemp[1].x + 2 * this.m * vTemp[0].x) / (this.m + other.m);
-        vFinal[1].y = vTemp[1].y;
-
-        // hack to avoid clumping
-        posTemp[0].x += vFinal[0].x;
-        posTemp[1].x += vFinal[1].x;
-
-        /* Rotate ball positions and velocities back. Reverse signs in trig expressions to rotate in the opposite direction */
-        // rotate balls
-        var bFinal = [new p5.Vector(), new p5.Vector()];
-
-        bFinal[0].x = cosine * posTemp[0].x - sine * posTemp[0].y;
-        bFinal[0].y = cosine * posTemp[0].y + sine * posTemp[0].x;
-        bFinal[1].x = cosine * posTemp[1].x - sine * posTemp[1].y;
-        bFinal[1].y = cosine * posTemp[1].y + sine * posTemp[1].x;
-
-        // update balls to screen position
-        other.position.x = this.position.x + bFinal[1].x;
-        other.position.y = this.position.y + bFinal[1].y;
-
-        this.position.add(bFinal[0]);
-
-        // update velocities
-        this.velocity.x = cosine * vFinal[0].x - sine * vFinal[0].y;
-        this.velocity.y = cosine * vFinal[0].y + sine * vFinal[0].x;
-        other.velocity.x = cosine * vFinal[1].x - sine * vFinal[1].y;
-        other.velocity.y = cosine * vFinal[1].y + sine * vFinal[1].x;
-      }
-    }
+    if (distMag < (this.r + other.r)) {this.conception(other, distVect);} // Spawn a new cell
   }
 
 
