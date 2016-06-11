@@ -9,7 +9,6 @@
 var colony; // A colony object
 
 function setup() {
-  //frameRate(10); // Useful for debugging
   colorMode(HSB, 360, 100, 100, 100);
   createCanvas(windowWidth, windowHeight);
   smooth();
@@ -19,11 +18,12 @@ function setup() {
   gui.remember(p);
   initGUI();
   background(p.bkgColor);
+  if (p.debug) {frameRate(10);}
   colony = new Colony(p.colonySize, p.cellStartSize);
 }
 
 function draw() {
-  if (!p.trails || p.debugCell) {background(p.bkgColor);}
+  if (!p.trails || p.debug) {background(p.bkgColor);}
   if (p.veils) {veil();} // Draws a near-transparent 'veil' in background colour over the frame
   if (!p.paused) {colony.run();}
   if (p.paused && mouseIsPressed) {colony.run();}
@@ -128,7 +128,7 @@ function keyTyped() {
   }
   
   if (key === 'd') { // D toggles 'cell debug' mode
-    p.debugCell = !p.debugCell;
+    p.debug = !p.debug;
   }
   
   if (key === 'n') { // N toggles 'show nucleus' mode
@@ -207,10 +207,6 @@ var initGUI = function () {
 	f6.add(p, 'coloring').name('Coloring');
     f6.add(p, 'veils').name('Trails (short)');
     f6.add(p, 'trails').name('Trails (long)');
-
-  var f7 = gui.addFolder("Debug");
-    f7.add(p, 'debugCell').name('Debug (cell)').listen();
-    f7.add(p, 'debugColony').name('Debug (colony)');
 }
 
 var Parameters = function () { //These are the initial values, not the randomised ones
@@ -261,8 +257,7 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.veils = false;
   this.trails = true;
   
-  this.debugCell = false;
-  this.debugColony = false;
+  this.debug = false;
 }
 
 this.randomizer = function() {
@@ -339,7 +334,7 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
   // Run the colony
   this.run = function() {
 
-    if (p.debugColony) {this.colonyDebugger(); }
+    if (p.debug) {this.colonyDebugger(); }
 
     // Iterate backwards through the ArrayList because we are removing items
     for (var i = this.cells.length - 1; i >= 0; i--) {
@@ -467,7 +462,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     if (p.coloring) {this.updateColor();}
     if (p.wraparound) {this.checkBoundaryWraparound();}
     this.display();
-    if (p.debugCell) {this.cellDebugger(); }
+    if (p.debug) {this.cellDebugger(); }
   }
 
   this.live = function() {
@@ -731,7 +726,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     other.fertility *= other.fertility;
   }
 
-  this.cellDebugger = function() {
+  this.cellDebugger = function() { // Displays cell parameters as text (for debug only)
     var rowHeight = 15;
     fill(255);
     textSize(rowHeight);
