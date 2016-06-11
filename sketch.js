@@ -2,6 +2,7 @@
  *
  * Working Title: Tentaculor
  *
+ * Working on #27 with a goal to rework test for collision (possibly losing change in direction)
  */
 
 var colony; // A colony object
@@ -202,7 +203,8 @@ var initGUI = function () {
 
 	var f6 = gui.addFolder("Options");
 	  f6.add(p, 'growing').name('Growing');
-	f6.add(p, 'coloring').name('Coloring');
+    f6.add(p, 'bouncing').name('Bouncing');
+	  f6.add(p, 'coloring').name('Coloring');
     f6.add(p, 'veils').name('Trails (short)');
     f6.add(p, 'trails').name('Trails (long)');
 }
@@ -251,6 +253,7 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.wraparound = true;
 
   this.growing = true;
+  this.bouncing = false;
   this.coloring = true;
   this.veils = false;
   this.trails = true;
@@ -343,9 +346,11 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
 
       // Iteration to check collision between current cell(i) and the rest
       if (this.cells.length <= colonyMaxSize) { // Don't check for collisons if there are too many cells (wait until some die off)
-        for (var others = i - 1; others >= 0; others--) { // Since main iteration (i) goes backwards, this one needs to too
-          var other = this.cells[others]; // Get the other cells, one by one
-          if (c.age > 20 && other.age > 20) {c.checkCollision(other);} // Don't check for collisions between newly-spawned cells
+        if (c.fertile) { //Only do the check on cells that are fertile
+          for (var others = i - 1; others >= 0; others--) { // Since main iteration (i) goes backwards, this one needs to too
+            var other = this.cells[others]; // Get the other cells, one by one
+            if (other.fertile) {c.checkCollision(other);} // Only check for collisions when both cells are fertile
+          }
         }
       }
     }
@@ -611,23 +616,12 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     pop();
   };
 
-  this.checkCollision = function(other) {
-    // Method receives a Cell object 'other' to get the required info about the collidee
-    if (this.fertile) {
-      // Collision is not checked for infertile cells to prevent young spawn from colliding with their parents.
-      // Consider moving this test upstream to where the method is called from
-
-      var distVect = p5.Vector.sub(other.position, this.position); // Static vector to get distance between the cell & other
-
-      // calculate magnitude of the vector separating the balls
-      var distMag = distVect.mag();
-
-      if (distMag < (this.r + other.r)) { // Test to see if a collision has occurred : is distance < sum of cell radius + other cell radius?
-
-        if (this.fertile && other.fertile) {this.conception(other, distVect); }// Spawn a new cell if both colliding cells are fertile
-
-		// EVERYTHING AFTER THIS POINT CONCERNS CHANGING THE DIRECTION
-
+  this.checkCollision = function(other) { // Method receives a Cell object 'other' to get the required info about the collidee
+    var distVect = p5.Vector.sub(other.position, this.position); // Static vector to get distance between the cell & other
+    var distMag = distVect.mag(); // calculate magnitude of the vector separating the balls
+    if (distMag < (this.r + other.r)) { // Test to see if a collision has occurred : is distance < sum of cell radius + other cell radius?
+      this.conception(other, distVect); // Spawn a new cell
+      if (p.bouncing) {
         // get angle of distVect
         var theta = distVect.heading();
         // precalculate trig values
@@ -687,7 +681,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
         other.velocity.y = cosine * vFinal[1].y + sine * vFinal[1].x;
       }
     }
-  };
+  }
 
 
 
