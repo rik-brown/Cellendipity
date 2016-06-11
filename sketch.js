@@ -1,5 +1,8 @@
 /*
- * Working Title: Aybe Sea
+ * Working Title: Tentaculor
+ *
+ *
+ * RANDOMIZER on restart
  *
  */
 
@@ -31,6 +34,7 @@ function draw() {
 function populateColony() {
   background(p.bkgColor); // Refresh the background
   colony.cells = [];
+  if (p.randomize) {randomizer();}
   colony = new Colony(p.colonySize, p.cellStartSize); //Could Colony receive a color-seed value (that is iterated through in a for- loop?) (or randomized?)
 }
 
@@ -136,7 +140,7 @@ function keyTyped() {
   }
   
   if (key === 'r') { // R for Randomize
-    randomize();
+    randomizer();
     colony.cells = [];
   }
   
@@ -151,6 +155,7 @@ var initGUI = function () {
 		var controller = f1.add(p, 'centerSpawn').name('Centered').listen();
 		controller.onChange(function(value) {populateColony(); });
 		f1.add(p, 'autoRestart').name('Auto-restart');
+		f1.add(p, 'randomize').name('Randomizer');
 		f1.add(p, 'paused').name('Pause').listen();
 	 
 	var f2 = gui.addFolder('Colour');
@@ -190,7 +195,7 @@ var initGUI = function () {
 	
 	var f5 = gui.addFolder("Movement");
         f5.add(p, 'noisePercent', 0, 100).step(1).name('Noise%').listen();
-	f5.add(p, 'spiral', 0, 10).name('Screw').listen();
+	f5.add(p, 'spiral', 0, 3).name('Screw').listen();
 	var controller =f5.add(p, 'stepSize', 0, 100).name('Step size').listen();
 	    controller.onChange(function(value) {if (p.stepSize==0) {p.stepped=false} else {p.stepped=true};});
 	f5.add(p, 'stepSizeN', 0, 100).name('Step size Nucleus').listen();
@@ -199,8 +204,7 @@ var initGUI = function () {
 	  
 	var f6 = gui.addFolder("Options");
 	  f6.add(p, 'growing').name('Growing');
-	f6.add(p, 'spawning').name('Reproducing');
-    f6.add(p, 'coloring').name('Coloring');
+	f6.add(p, 'coloring').name('Coloring');
     f6.add(p, 'veils').name('Trails (short)');
     f6.add(p, 'trails').name('Trails (long)');
 
@@ -215,6 +219,7 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.centerSpawn = false; // true=initial spawn is width/2, height/2 false=random
   this.autoRestart = false; // If true, will not wait for keypress before starting anew
   this.paused = false; // If true, draw will not advance unless mouseIsPressed
+  this.randomize = false; // If true, parameters will be randomized on restart
 
   this.bkgColHSV = { h: random(360), s: random(), v: random() };
   this.bkgColor = color(this.bkgColHSV.h, this.bkgColHSV.s*100, this.bkgColHSV.v*100); // Background colour
@@ -240,7 +245,7 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.cellEndSize = random(0, 10);
   this.lifespan = int(random (100, 5000)); // Max lifespan in #frames
   this.fertileStart = random(100);
-  this.spawnLimit = random(10);
+  this.spawnLimit = int(random(10));
   this.flatness = random(0, 50); // Amount of flatness (from circle to ellipse)
   if (random(1) > 0.8) {this.nucleus = true;} else {this.nucleus = false;}
   
@@ -252,7 +257,6 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.wraparound = true;
   
   this.growing = true;
-  this.spawning = true;
   this.coloring = true;
   this.veils = false;
   this.trails = true;
@@ -261,9 +265,9 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.debugColony = false;
 }
 
-this.randomize = function() {
-  p.colonySize = int(random (5,50));
-  if (random(1) > 0.5) {p.centerSpawn = true;} else {p.centerSpawn = false;}
+this.randomizer = function() {
+  p.colonySize = int(random (2,30));
+  if (random(1) > 0.4) {p.centerSpawn = true;} else {p.centerSpawn = false;}
   
   p.bkgColHSV = { h: random(360), s: random(), v: random() };
   p.bkgColor = color(p.bkgColHSV.h, p.bkgColHSV.s*100, p.bkgColHSV.v*100);
@@ -285,19 +289,19 @@ this.randomize = function() {
   if (random(1) > 0.5) {p.stroke_BTwist = true;} else {p.stroke_BTwist = false;}
   if (random(1) > 0.5) {p.stroke_ATwist = true;} else {p.stroke_ATwist = false;}
 
-  p.cellStartSize = random(30,150);
-  p.cellEndSize = random(0, 25);
-  p.lifespan = int(random (100, 5000));
-  p.fertileStart = random(100);
-  p.spawnLimit = random(10);
+  p.cellStartSize = random(25,50);
+  p.cellEndSize = random(0, 20);
+  p.lifespan = int(random (100, 3000));
+  p.fertileStart = random(95);
+  p.spawnLimit = int(random(10));
   p.flatness = random(100);
   if (random(1) > 0.7) {p.nucleus = true;} else {p.nucleus = false;}
 
   p.noisePercent = random(100); // Percentage of velocity coming from noise-calculation
-  p.spiral = random(10); // Number of full (TWO_PI) rotations the velocity heading will turn through during lifespan
-  if (random(1) < 0.6) {p.stepSize = 0;} else {p.stepSize = random(100)};
+  p.spiral = random(3); // Number of full (TWO_PI) rotations the velocity heading will turn through during lifespan
+  if (random(1) < 0.7) {p.stepSize = 0;} else {p.stepSize = random(100)};
   if (p.stepSize==0) {p.stepped=false} else {p.stepped=true}
-  p.stepSizeN = random(50);
+  p.stepSizeN = random(20);
 }
 
 /* ------------------------------------------------------------------------------------------------------------- */
@@ -459,7 +463,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     this.live();
     this.updatePosition();
     if (p.growing) {this.updateSize();}
-    if (p.spawning) {this.updateFertility();}
+    this.updateFertility();
     if (p.coloring) {this.updateColor();}
     if (p.wraparound) {this.checkBoundaryWraparound();}
     this.display();
@@ -720,7 +724,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     this.childStrokeColor = lerpColor(this.strokeColor, other.strokeColor, 0.5);
   
     // Call spawn method (in Colony) with the new parameters for position, velocity, colour & starting radius)
-    if (p.spawning) {colony.spawn(this.spawnPos, this.spawnVel, this.childFillColor, this.childStrokeColor, this.r);}
+    colony.spawn(this.spawnPos, this.spawnVel, this.childFillColor, this.childStrokeColor, this.r);
 
     //Reset fertility counter
     this.fertility *= this.fertility;
