@@ -1,7 +1,5 @@
 /*
- *
  * Working Title: Tentaculor
- *
  */
 
 var colony; // A colony object
@@ -202,7 +200,7 @@ var initGUI = function () {
 
 	var f6 = gui.addFolder("Options");
 	  f6.add(p, 'growing').name('Growing');
-	f6.add(p, 'coloring').name('Coloring');
+    f6.add(p, 'coloring').name('Coloring');
     f6.add(p, 'veils').name('Trails (short)');
     f6.add(p, 'trails').name('Trails (long)');
 }
@@ -343,9 +341,11 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
 
       // Iteration to check collision between current cell(i) and the rest
       if (this.cells.length <= colonyMaxSize) { // Don't check for collisons if there are too many cells (wait until some die off)
-        for (var others = i - 1; others >= 0; others--) { // Since main iteration (i) goes backwards, this one needs to too
-          var other = this.cells[others]; // Get the other cells, one by one
-          if (c.age > 20 && other.age > 20) {c.checkCollision(other);} // Don't check for collisions between newly-spawned cells
+        if (c.fertile) { //Only do the check on cells that are fertile
+          for (var others = i - 1; others >= 0; others--) { // Since main iteration (i) goes backwards, this one needs to too
+            var other = this.cells[others]; // Get the other cells, one by one
+            if (other.fertile) {c.checkCollision(other);} // Only check for collisions when both cells are fertile
+          }
         }
       }
     }
@@ -611,83 +611,11 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     pop();
   };
 
-  this.checkCollision = function(other) {
-    // Method receives a Cell object 'other' to get the required info about the collidee
-    if (this.fertile) {
-      // Collision is not checked for infertile cells to prevent young spawn from colliding with their parents.
-      // Consider moving this test upstream to where the method is called from
-
-      var distVect = p5.Vector.sub(other.position, this.position); // Static vector to get distance between the cell & other
-
-      // calculate magnitude of the vector separating the balls
-      var distMag = distVect.mag();
-
-      if (distMag < (this.r + other.r)) { // Test to see if a collision has occurred : is distance < sum of cell radius + other cell radius?
-
-        if (this.fertile && other.fertile) {this.conception(other, distVect); }// Spawn a new cell if both colliding cells are fertile
-
-		// EVERYTHING AFTER THIS POINT CONCERNS CHANGING THE DIRECTION
-
-        // get angle of distVect
-        var theta = distVect.heading();
-        // precalculate trig values
-        var sine = sin(theta);
-        var cosine = cos(theta);
-
-        // posTemp will hold rotated cell positions. You just need to worry about posTemp[1] position
-        var posTemp = [new p5.Vector(), new p5.Vector()];
-
-        // this ball's position is relative to the other so you can use the vector between them (distVect) as the reference point in the rotation expressions.
-        // posTemp[0].position.x and posTemp[0].position.y will initialize automatically to 0.0, which is what you want since b[1] will rotate around b[0]
-        posTemp[1].x = cosine * distVect.x + sine * distVect.y;
-        posTemp[1].y = cosine * distVect.y - sine * distVect.x;
-
-        // rotate Temporary velocities
-        var vTemp = [new p5.Vector(), new p5.Vector()];
-
-        vTemp[0].x = cosine * this.velocity.x + sine * this.velocity.y;
-        vTemp[0].y = cosine * this.velocity.y - sine * this.velocity.x;
-        vTemp[1].x = cosine * other.velocity.x + sine * other.velocity.y;
-        vTemp[1].y = cosine * other.velocity.y - sine * other.velocity.x;
-
-        /* Now that velocities are rotated, you can use 1D conservation of momentum equations to calculate the final velocity along the x-axis. */
-        var vFinal = [new p5.Vector(), new p5.Vector()];
-
-        // final rotated velocity for b[0]
-        vFinal[0].x = ((this.m - other.m) * vTemp[0].x + 2 * other.m * vTemp[1].x) / (this.m + other.m);
-        vFinal[0].y = vTemp[0].y;
-
-        // final rotated velocity for b[0]
-        vFinal[1].x = ((other.m - this.m) * vTemp[1].x + 2 * this.m * vTemp[0].x) / (this.m + other.m);
-        vFinal[1].y = vTemp[1].y;
-
-        // hack to avoid clumping
-        posTemp[0].x += vFinal[0].x;
-        posTemp[1].x += vFinal[1].x;
-
-        /* Rotate ball positions and velocities back. Reverse signs in trig expressions to rotate in the opposite direction */
-        // rotate balls
-        var bFinal = [new p5.Vector(), new p5.Vector()];
-
-        bFinal[0].x = cosine * posTemp[0].x - sine * posTemp[0].y;
-        bFinal[0].y = cosine * posTemp[0].y + sine * posTemp[0].x;
-        bFinal[1].x = cosine * posTemp[1].x - sine * posTemp[1].y;
-        bFinal[1].y = cosine * posTemp[1].y + sine * posTemp[1].x;
-
-        // update balls to screen position
-        other.position.x = this.position.x + bFinal[1].x;
-        other.position.y = this.position.y + bFinal[1].y;
-
-        this.position.add(bFinal[0]);
-
-        // update velocities
-        this.velocity.x = cosine * vFinal[0].x - sine * vFinal[0].y;
-        this.velocity.y = cosine * vFinal[0].y + sine * vFinal[0].x;
-        other.velocity.x = cosine * vFinal[1].x - sine * vFinal[1].y;
-        other.velocity.y = cosine * vFinal[1].y + sine * vFinal[1].x;
-      }
-    }
-  };
+  this.checkCollision = function(other) { // Method receives a Cell object 'other' to get the required info about the collidee
+    var distVect = p5.Vector.sub(other.position, this.position); // Static vector to get distance between the cell & other
+    var distMag = distVect.mag(); // calculate magnitude of the vector separating the balls
+    if (distMag < (this.r + other.r)) {this.conception(other, distVect);} // Spawn a new cell
+  }
 
 
 
