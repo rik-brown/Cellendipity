@@ -364,12 +364,12 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
     //rect(-1, -1, width+1, height+1);
   };
 
-  this.colonyDebugger = function() { // For debug only
+  this.colonyDebugger = function() { // Displays some values as text at the top left corner (for debug only)
     fill(0);
     rect(0,0,300,20);
     fill(360, 100);
     textSize(16);
-    text("Nr. cells: " + this.cells.length + " MaxLimit:" + colonyMaxSize + " Paused: " + p.paused, 10, 20);
+    text("Nr. cells: " + this.cells.length + " MaxLimit:" + colonyMaxSize, 10, 20);
   };
 }
 
@@ -653,7 +653,6 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     var rowHeight = 15;
     fill(255);
     textSize(rowHeight);
-    //text("Your debug text HERE", this.position.x, this.position.y);
     // RADIUS
     //text("r:" + this.r, this.position.x, this.position.y + rowHeight*1);
     //text("cellStartSize:" + this.cellStartSize, this.position.x, this.position.y + rowHeight*2);
