@@ -5,7 +5,7 @@
 var colony; // A colony object
 
 function setup() {
-  colorMode(HSB, 360, 100, 100, 100);
+  colorMode(HSB, 360, 255, 255, 255);
   createCanvas(windowWidth, windowHeight);
   smooth();
   ellipseMode(RADIUS);
@@ -66,48 +66,48 @@ function keyTyped() {
   if (key === '1') { // spawn RED
     if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
-    var FillColor = color(0, 100, 100); //RED
-    var StrokeColor = color(0, 0, 100);
+    var FillColor = color(0, 255, 255); //RED
+    var StrokeColor = color(0, 0, 255);
     colony.spawn(pos, vel, FillColor, StrokeColor, p.cellStartSize);
   }
 
   if (key === '2') { // spawn YELLOW
     if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
-    var FillColor = color(60, 100, 100); //RED
-    var StrokeColor = color(0, 0, 100);
+    var FillColor = color(60, 255, 255); //RED
+    var StrokeColor = color(0, 0, 255);
     colony.spawn(pos, vel, FillColor, StrokeColor, p.cellStartSize);
   }
 
   if (key === '3') { // spawn GREEN
     if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
-    var FillColor = color(120, 100, 100); //GREEN
-    var StrokeColor = color(0, 0, 100);
+    var FillColor = color(120, 255, 255); //GREEN
+    var StrokeColor = color(0, 0, 255);
     colony.spawn(pos, vel, FillColor, StrokeColor, p.cellStartSize);
   }
 
   if (key === '4') { // spawn CYAN
     if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
-    var FillColor = color(180, 100, 100); //GREEN
-    var StrokeColor = color(0, 0, 100);
+    var FillColor = color(180, 255, 255); //GREEN
+    var StrokeColor = color(0, 0, 255);
     colony.spawn(pos, vel, FillColor, StrokeColor, p.cellStartSize);
   }
 
   if (key === '5') { //spawn BLUE
     if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
-    var FillColor = color(240, 100, 100); //BLUE
-    var StrokeColor = color(0, 0, 100);
+    var FillColor = color(240, 255, 255); //BLUE
+    var StrokeColor = color(0, 0, 255);
     colony.spawn(pos, vel, FillColor, StrokeColor, p.cellStartSize);
   }
 
   if (key === '6') { //spawn VIOLET
     if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
-    var FillColor = color(300, 100, 100); //BLUE
-    var StrokeColor = color(0, 0, 100);
+    var FillColor = color(300, 255, 255); //BLUE
+    var StrokeColor = color(0, 0, 255);
     colony.spawn(pos, vel, FillColor, StrokeColor, p.cellStartSize);
   }
 
@@ -156,14 +156,14 @@ var initGUI = function () {
 
 	var f2 = gui.addFolder('Colour');
 	  var controller = f2.addColor(p, 'bkgColHSV').name('Background').listen();
-	    controller.onChange(function(value) {p.bkgColor = color(value.h, value.s*100, value.v*100); background(p.bkgColor);});
+	    controller.onChange(function(value) {p.bkgColor = color(value.h, value.s*255, value.v*255); background(p.bkgColor);});
 	  var controller = f2.addColor(p, 'fillColHSV').name('Fill').listen();
-      controller.onChange(function(value) {p.fillColor = color(value.h, value.s*100, value.v*100); populateColony();});
+      controller.onChange(function(value) {p.fillColor = color(value.h, value.s*255, value.v*255); populateColony();});
 	  var controller = f2.addColor(p, 'strokeColHSV').name('Line').listen();
-	    controller.onChange(function(value) {p.strokeColor = color(value.h, value.s*100, value.v*100); populateColony();});
-	  var controller = f2.add(p, 'fillAlpha', 0, 100).name('Transp.(fill)').listen();
+	    controller.onChange(function(value) {p.strokeColor = color(value.h, value.s*255, value.v*255); populateColony();});
+	  var controller = f2.add(p, 'fillAlpha', 0, 255).name('Transp.(fill)').listen();
       controller.onChange(function(value) {populateColony();});
-	  var controller = f2.add(p, 'strokeAlpha', 0, 100).name('Transp.(line)').listen();
+	  var controller = f2.add(p, 'strokeAlpha', 0, 255).name('Transp.(line)').listen();
 	    controller.onChange(function(value) {populateColony();});
 
 	var f3 = gui.addFolder("Color Modulators");
@@ -214,13 +214,13 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.randomize = false; // If true, parameters will be randomized on restart
 
   this.bkgColHSV = { h: random(360), s: random(), v: random() };
-  this.bkgColor = color(this.bkgColHSV.h, this.bkgColHSV.s*100, this.bkgColHSV.v*100); // Background colour
+  this.bkgColor = color(this.bkgColHSV.h, this.bkgColHSV.s*255, this.bkgColHSV.v*255); // Background colour
   this.fillColHSV = { h: random(360), s: random(), v: random() };
-  this.fillColor = color(this.fillColHSV.h, this.fillColHSV.s*100, this.fillColHSV.v*100); // Cell colour
-  this.fillAlpha = random(100);
+  this.fillColor = color(this.fillColHSV.h, this.fillColHSV.s*255, this.fillColHSV.v*255); // Cell colour
+  this.fillAlpha = random(255);
   this.strokeColHSV = { h: random(360), s: random(), v: random() };
-  this.strokeColor = color(this.strokeColHSV.h, this.strokeColHSV.s*100, this.strokeColHSV.v*100); // Cell colour
-  this.strokeAlpha = random(100);
+  this.strokeColor = color(this.strokeColHSV.h, this.strokeColHSV.s*255, this.strokeColHSV.v*255); // Cell colour
+  this.strokeAlpha = random(255);
 
   this.variance = random(100); // Degree of influence from modulators & tweakers (from 0-1 or 0-100%)
 
@@ -261,13 +261,13 @@ this.randomizer = function() {
   if (random(1) > 0.4) {p.centerSpawn = true;} else {p.centerSpawn = false;}
 
   p.bkgColHSV = { h: random(360), s: random(), v: random() };
-  p.bkgColor = color(p.bkgColHSV.h, p.bkgColHSV.s*100, p.bkgColHSV.v*100);
+  p.bkgColor = color(p.bkgColHSV.h, p.bkgColHSV.s*255, p.bkgColHSV.v*255);
   p.fillColHSV = { h: random(360), s: random(), v: random() };
-  p.fillColor = color(p.fillColHSV.h, p.fillColHSV.s*100, p.fillColHSV.v*100);
+  p.fillColor = color(p.fillColHSV.h, p.fillColHSV.s*255, p.fillColHSV.v*255);
   p.strokeColHSV = { h: random(360), s: random(), v: random() };
-  p.strokeColor = color(p.strokeColHSV.h, p.strokeColHSV.s*100, p.strokeColHSV.v*100);
-  p.fillAlpha = random(100);
-  p.strokeAlpha = random(100);
+  p.strokeColor = color(p.strokeColHSV.h, p.strokeColHSV.s*255, p.strokeColHSV.v*255);
+  p.fillAlpha = random(255);
+  p.strokeAlpha = random(255);
 
   p.variance = random(100);
 
@@ -404,16 +404,16 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   // GROWTH & REPRODUCTION
   this.age = 0; // Age is 'number of frames since birth'. A new cell always starts with age = 0. What is it used for?
-  this.lifespan = lerp(p.lifespan, (p.lifespan * map(this.dna.genes[2], 0, 1, 0.8, 1.2)), p.variance/100); // Lifespan can be lowered by DNA but not increased
-  this.fertility = lerp(p.fertileStart/100, (p.fertileStart/100 * map(this.dna.genes[14], 0, 1, 0.7, 1.0)), p.variance/100); // Fertility can be lowered by DNA but not increased
+  this.lifespan = lerp(p.lifespan, (p.lifespan * map(this.dna.genes[2], 0, 1, 0.8, 1.2)), p.variance*0.01); // Lifespan can be lowered by DNA but not increased
+  this.fertility = lerp(p.fertileStart*0.01, (p.fertileStart*0.01 * map(this.dna.genes[14], 0, 1, 0.7, 1.0)), p.variance*0.01); // Fertility can be lowered by DNA but not increased
   this.spawnCount = int(p.spawnLimit); // Max. number of spawns
 
   // SIZE AND SHAPE
-  this.cellStartSize = lerp(cellStartSize_, (cellStartSize_ * map(this.dna.genes[1], 0, 1, 0.8, 1.0)), p.variance/100); // Note: If last value in map() is >1 then new cells may be larger than their parents
-  this.cellEndSize = lerp(p.cellEndSize, (p.cellEndSize * map(this.dna.genes[2], 0, 1, 1.0, 2.0)), p.variance/100);
+  this.cellStartSize = lerp(cellStartSize_, (cellStartSize_ * map(this.dna.genes[1], 0, 1, 0.8, 1.0)), p.variance*0.01); // Note: If last value in map() is >1 then new cells may be larger than their parents
+  this.cellEndSize = lerp(p.cellEndSize, (p.cellEndSize * map(this.dna.genes[2], 0, 1, 1.0, 2.0)), p.variance*0.01);
   this.r = this.cellStartSize; // Initial value for radius
   this.size = map(this.r, this.cellStartSize, this.cellEndSize, 1, 0);
-  this.flatness = lerp(p.flatness/100, (p.flatness/100 * map(this.dna.genes[13], 0, 1, 0.8, 1.2)), p.variance/100) +1; // To make circles into ellipses
+  this.flatness = lerp(p.flatness*0.01, (p.flatness*0.01 * map(this.dna.genes[13], 0, 1, 0.8, 1.2)), p.variance*0.01) +1; // To make circles into ellipses
   this.growth = (this.cellStartSize-this.cellEndSize)/p.lifespan; // Should work for both large>small and small>large
   this.drawStep = 1;
   this.drawStepN = 1;
@@ -421,8 +421,8 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   // MOVEMENT
   this.position = pos; //cell has position
   this.velocityLinear = vel; //cell has unique basic velocity component
-  this.noisePercent = lerp(p.noisePercent, (p.noisePercent * map(this.dna.genes[3], 0, 1, 0.8, 1.2)), p.variance/100); // Spiral amount varies according to gene[4]
-  this.spiral = lerp(p.spiral, (p.spiral * map(this.dna.genes[4], 0, 1, 0.8, 1.2)), p.variance/100); // Spiral amount varies according to gene[4]
+  this.noisePercent = lerp(p.noisePercent, (p.noisePercent * map(this.dna.genes[3], 0, 1, 0.8, 1.2)), p.variance*0.01); // Spiral amount varies according to gene[4]
+  this.spiral = lerp(p.spiral, (p.spiral * map(this.dna.genes[4], 0, 1, 0.8, 1.2)), p.variance*0.01); // Spiral amount varies according to gene[4]
   this.vMax = map(this.dna.genes[4], 0, 1, 0, 4); //Maximum magnitude in velocity components generated by noise
   this.xoff = random(1000); //Seed for noise
   this.yoff = random(1000); //Seed for noise
@@ -431,18 +431,18 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   // COLOUR
 
   // FILL COLOR
-  this.fill_H = lerp(hue(fillColor_), (hue(fillColor_) * map(this.dna.genes[5], 0, 1, 0.95, 1.05)), p.variance/100);
-  this.fill_S = lerp(saturation(fillColor_), (saturation(fillColor_) * map(this.dna.genes[6], 0, 1, 0.9, 1.1)), p.variance/100);
-  this.fill_B = lerp(brightness(fillColor_), (brightness(fillColor_) * map(this.dna.genes[7], 0, 1, 0.9, 1.1)), p.variance/100);
+  this.fill_H = lerp(hue(fillColor_), (hue(fillColor_) * map(this.dna.genes[5], 0, 1, 0.95, 1.05)), p.variance*0.01);
+  this.fill_S = lerp(saturation(fillColor_), (saturation(fillColor_) * map(this.dna.genes[6], 0, 1, 0.9, 1.1)), p.variance*0.01);
+  this.fill_B = lerp(brightness(fillColor_), (brightness(fillColor_) * map(this.dna.genes[7], 0, 1, 0.9, 1.1)), p.variance*0.01);
   this.fillColor = color(this.fill_H, this.fill_S, this.fill_B); // Initial color is set
-  this.fillAlpha = lerp(p.fillAlpha, (p.fillAlpha * map(this.dna.genes[8], 0, 1, 0.9, 1.1)), p.variance/100);
+  this.fillAlpha = lerp(p.fillAlpha, (p.fillAlpha * map(this.dna.genes[8], 0, 1, 0.9, 1.1)), p.variance*0.01);
 
   //STROKE COLOR
-  this.stroke_H = lerp(hue(strokeColor_), (hue(strokeColor_) * map(this.dna.genes[9], 0, 1, 0.95, 1.05)), p.variance/100);
-  this.stroke_S = lerp(saturation(strokeColor_), (saturation(strokeColor_) * map(this.dna.genes[10], 0, 1, 0.9, 1.1)), p.variance/100);
-  this.stroke_B = lerp(brightness(strokeColor_), (brightness(strokeColor_) * map(this.dna.genes[11], 0, 1, 0.9, 1.1)), p.variance/100);
+  this.stroke_H = lerp(hue(strokeColor_), (hue(strokeColor_) * map(this.dna.genes[9], 0, 1, 0.95, 1.05)), p.variance*0.01);
+  this.stroke_S = lerp(saturation(strokeColor_), (saturation(strokeColor_) * map(this.dna.genes[10], 0, 1, 0.9, 1.1)), p.variance*0.01);
+  this.stroke_B = lerp(brightness(strokeColor_), (brightness(strokeColor_) * map(this.dna.genes[11], 0, 1, 0.9, 1.1)), p.variance*0.01);
   this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B); // Initial color is set
-  this.strokeAlpha = lerp(p.strokeAlpha, (p.strokeAlpha * map(this.dna.genes[12], 0, 1, 0.9, 1.1)), p.variance/100);
+  this.strokeAlpha = lerp(p.strokeAlpha, (p.strokeAlpha * map(this.dna.genes[12], 0, 1, 0.9, 1.1)), p.variance*0.01);
 
   // Variables for LINEAR MOVEMENT WITH COLLISIONS
   this.m = this.r * 0.1; // Mass (sort of)
@@ -462,7 +462,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     this.age += 1;
     this.maturity = map(this.age, 0, this.lifespan, 1, 0);
     this.drawStep--;
-    //this.drawStepStart = (this.r *2 + this.growth) * p.stepSize/100;
+    //this.drawStepStart = (this.r *2 + this.growth) * p.stepSize*0.01;
 	this.drawStepStart = map(p.stepSize, 0, 100, 0 , (this.r *2 + this.growth));
     if (this.drawStep < 0) {this.drawStep = this.drawStepStart;}
     this.drawStepN--;
@@ -476,7 +476,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     var velocityNoise = createVector(vx, vy); // create new velocity vector based on new vx, vy components
     this.xoff += this.step; // increment x offset for next vx value
     this.yoff += this.step; // increment x offset for next vy value
-    this.velocity = p5.Vector.lerp(this.velocityLinear, velocityNoise, p.noisePercent/100);
+    this.velocity = p5.Vector.lerp(this.velocityLinear, velocityNoise, p.noisePercent*0.01);
     var screwAngle = map(this.maturity, 0, 1, 0, this.spiral * TWO_PI); //swapped size with maturity
     if (this.dna.genes[4] >= 0.5) {screwAngle *= -1;}
     this.velocity.rotate(screwAngle);
@@ -507,17 +507,17 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     * How to make S & B 'circular' - maybe from 99 to 100, the next step should be 99 (like a sawtooth wave)
     */
 
-    if (p.fill_STwist) {this.fill_S = map(this.size, 1, 0, 50, 100); this.fillColor = color(this.fill_H, this.fill_S, this.fill_B);} // Modulate fill saturation by radius
-    if (p.fill_BTwist) {this.fill_B = map(this.size, 1, 0, 50, 100); this.fillColor = color(this.fill_H, this.fill_S, this.fill_B);} // Modulate fill brightness by radius
-    if (p.fill_ATwist) {this.fillAlpha = map(this.size, 1, 0, 0, 100);} // Modulate fill Alpha by radius
+    if (p.fill_STwist) {this.fill_S = map(this.size, 1, 0, 128, 255); this.fillColor = color(this.fill_H, this.fill_S, this.fill_B);} // Modulate fill saturation by radius
+    if (p.fill_BTwist) {this.fill_B = map(this.size, 1, 0, 128, 255); this.fillColor = color(this.fill_H, this.fill_S, this.fill_B);} // Modulate fill brightness by radius
+    if (p.fill_ATwist) {this.fillAlpha = map(this.size, 1, 0, 0, 255);} // Modulate fill Alpha by radius
     if (p.fill_HTwist) { // Modulate fill hue by radius. Does not change original hue value but replaces it with a 'twisted' version
       this.fill_Htwisted = map(this.size, 1, 0, this.fill_H, this.fill_H+60);
       if (this.fill_Htwisted > 360) {this.fill_Htwisted -= 360;}
       this.fillColor = color(this.fill_Htwisted, this.fill_S, this.fill_B); //fill colour is updated with new hue value
     }
-    if (p.stroke_STwist) {this.stroke_S = map(this.size, 1, 0, 50, 100); this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B);} // Modulate stroke saturation by radius
-    if (p.stroke_BTwist) {this.stroke_B = map(this.size, 1, 0, 50, 100); this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B);} // Modulate stroke brightness by radius
-    if (p.stroke_ATwist) {this.strokeAlpha = map(this.size, 1, 0, 0, 100);} // Modulate stroke Alpha by radius
+    if (p.stroke_STwist) {this.stroke_S = map(this.size, 1, 0, 128, 255); this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B);} // Modulate stroke saturation by radius
+    if (p.stroke_BTwist) {this.stroke_B = map(this.size, 1, 0, 128, 255); this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B);} // Modulate stroke brightness by radius
+    if (p.stroke_ATwist) {this.strokeAlpha = map(this.size, 1, 0, 0, 255);} // Modulate stroke Alpha by radius
     if (p.stroke_HTwist) { // Modulate stroke hue by radius
       this.stroke_Htwisted = map(this.size, 1, 0, this.stroke_H, this.stroke_H+60);
       if (this.stroke_Htwisted > 360) {this.stroke_Htwisted -= 360;}
