@@ -144,15 +144,14 @@ function keyTyped() {
 
 var initGUI = function () {
 
-	var f1 = gui.addFolder('Population');
-		var controller = f1.add(p, 'colonySize', 1, 200).step(1).name('Size (start)').listen();
-		controller.onChange(function(value) {populateColony(); });
-		f1.add(p, 'variance', 0, 100).name('Variance').listen(); // Waiting for a purpose...
+	var f1 = gui.addFolder('Colony');
+		var controller = f1.add(p, 'colonySize', 1, 200).step(1).name('Nr. of cells').listen();
+		  controller.onChange(function(value) {populateColony(); });
+		var controller = f1.add(p, 'variance', 0, 100).step(1).name('Diversity').listen();
+      controller.onChange(function(value) {populateColony(); });
 		var controller = f1.add(p, 'centerSpawn').name('Centered').listen();
-		controller.onChange(function(value) {populateColony(); });
-		f1.add(p, 'autoRestart').name('Auto-restart');
-		f1.add(p, 'randomize').name('Randomizer');
-		f1.add(p, 'paused').name('Pause').listen();
+		  controller.onChange(function(value) {populateColony(); });
+		f1.add(p, 'growing').name('Cells grow');
 
 	var f2 = gui.addFolder('Colour');
 	  var controller = f2.addColor(p, 'bkgColHSV').name('Background').listen();
@@ -166,43 +165,48 @@ var initGUI = function () {
 	  var controller = f2.add(p, 'strokeAlpha', 0, 255).name('Transp.(line)').listen();
 	    controller.onChange(function(value) {populateColony();});
 
-	var f3 = gui.addFolder("Color Modulators");
+	var f3 = gui.addFolder("Fill Color tweaks");
 	  f3.add(p, 'fill_HTwist').name('Fill Hue').listen();
     f3.add(p, 'fill_STwist').name('Fill Satur.').listen();
     f3.add(p, 'fill_BTwist').name('Fill Bright.').listen();
     f3.add(p, 'fill_ATwist').name('Fill Transp.').listen();
-	  f3.add(p, 'stroke_HTwist').name('Line Hue').listen();
-    f3.add(p, 'stroke_STwist').name('Line Satur.').listen();
-    f3.add(p, 'stroke_BTwist').name('Line Bright.').listen();
-    f3.add(p, 'stroke_ATwist').name('Line Transp.').listen();
 
-	var f4 = gui.addFolder("Shape");
-		var controller = f4.add(p, 'cellStartSize', 10, 200).step(1).name('Size (start)').listen();
-		controller.onChange(function(value) {populateColony();});
-		var controller = f4.add(p, 'cellEndSize', 0.5, 50).step(0.5).name('Size (end)').listen();
-		controller.onChange(function(value) {populateColony(); });
-		var controller = f4.add(p, 'lifespan', 100, 5000).step(10).name('Lifespan').listen();
-		controller.onChange(function(value) {populateColony(); });
-		var controller = f4.add(p, 'fertileStart', 0, 100).name('Fertility').listen();
-		controller.onChange(function(value) {populateColony();});
-		f4.add(p, 'spawnLimit').name('Spawn Limit');
-		f4.add(p, 'flatness', 0, 100).name('Flatness').listen();
-		f4.add(p, 'nucleus').name('Nucleus').listen();
+  var f4 = gui.addFolder("Line Color tweaks");
+  	  f4.add(p, 'stroke_HTwist').name('Line Hue').listen();
+      f4.add(p, 'stroke_STwist').name('Line Satur.').listen();
+      f4.add(p, 'stroke_BTwist').name('Line Bright.').listen();
+      f4.add(p, 'stroke_ATwist').name('Line Transp.').listen();
 
-	var f5 = gui.addFolder("Movement");
-        f5.add(p, 'noisePercent', 0, 100).step(1).name('Noise%').listen();
-	f5.add(p, 'spiral', 0, 3).name('Screw').listen();
-	var controller =f5.add(p, 'stepSize', 0, 100).name('Step size').listen();
-	    controller.onChange(function(value) {if (p.stepSize==0) {p.stepped=false} else {p.stepped=true};});
-	f5.add(p, 'stepSizeN', 0, 100).name('Step size Nucleus').listen();
-	var controller =f5.add(p, 'wraparound').name('Wraparound');
-	    controller.onChange(function(value) {populateColony();});
+	var f5 = gui.addFolder("Growth");
+		var controller = f5.add(p, 'cellStartSize', 10, 200).step(1).name('Size (start)').listen();
+		  controller.onChange(function(value) {populateColony();});
+		var controller = f5.add(p, 'cellEndSize', 0.5, 50).step(0.5).name('Size (end)').listen();
+		  controller.onChange(function(value) {populateColony(); });
+		var controller = f5.add(p, 'lifespan', 100, 5000).step(10).name('Lifespan').listen();
+		  controller.onChange(function(value) {populateColony(); });
+		var controller = f5.add(p, 'fertileStart', 0, 100).step(1).name('Fertility%').listen();
+		  controller.onChange(function(value) {populateColony();});
+		f5.add(p, 'spawnLimit').step(1).name('# Spawns');
 
-	var f6 = gui.addFolder("Options");
-	  f6.add(p, 'growing').name('Growing');
-    f6.add(p, 'coloring').name('Coloring');
-    f6.add(p, 'veils').name('Trails (short)');
-    f6.add(p, 'trails').name('Trails (long)');
+	var f6 = gui.addFolder("Movement");
+    f6.add(p, 'noisePercent', 0, 100).step(1).name('Noise%').listen();
+	  f6.add(p, 'spiral', 0, 3).name('Screw').listen();
+	  var controller =f6.add(p, 'stepSize', 0, 100).name('Step (cell)').listen();
+	   controller.onChange(function(value) {if (p.stepSize==0) {p.stepped=false} else {p.stepped=true};});
+	  f6.add(p, 'stepSizeN', 0, 100).name('Step (nucleus)').listen();
+
+	var f7 = gui.addFolder("Appearance");
+    f7.add(p, 'flatness', 0, 100).name('Flatness').listen();
+    f7.add(p, 'nucleus').name('Nucleus').listen();
+    f7.add(p, 'veils').name('Trails (short)');
+    f7.add(p, 'trails').name('Trails (long)');
+
+  var f8 = gui.addFolder("Options");
+    var controller = f8.add(p, 'wraparound').name('Wraparound');
+      controller.onChange(function(value) {populateColony();});
+    f8.add(p, 'paused').name('Pause').listen();
+    f8.add(p, 'autoRestart').name('Auto-restart');
+    f8.add(p, 'randomize').name('Randomizer');
 }
 
 var Parameters = function () { //These are the initial values, not the randomised ones
@@ -236,7 +240,7 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.cellStartSize = random(30,100); // Cell radius at spawn
   this.cellEndSize = random(0, 10);
   this.lifespan = int(random (100, 5000)); // Max lifespan in #frames
-  this.fertileStart = random(100);
+  this.fertileStart = int(random(90));
   this.spawnLimit = int(random(10));
   this.flatness = random(0, 50); // Amount of flatness (from circle to ellipse)
   if (random(1) > 0.8) {this.nucleus = true;} else {this.nucleus = false;}
@@ -249,7 +253,6 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.wraparound = true;
 
   this.growing = true;
-  this.coloring = true;
   this.veils = false;
   this.trails = true;
 
@@ -283,7 +286,7 @@ this.randomizer = function() {
   p.cellStartSize = random(25,50);
   p.cellEndSize = random(0, 20);
   p.lifespan = int(random (100, 3000));
-  p.fertileStart = random(95);
+  p.fertileStart = int(random(95));
   p.spawnLimit = int(random(10));
   p.flatness = random(100);
   if (random(1) > 0.7) {p.nucleus = true;} else {p.nucleus = false;}
@@ -452,7 +455,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     this.updatePosition();
     if (p.growing) {this.updateSize();}
     this.updateFertility();
-    if (p.coloring) {this.updateColor();}
+    this.updateColor();
     if (p.wraparound) {this.checkBoundaryWraparound();}
     this.display();
     if (p.debug) {this.cellDebugger(); }
@@ -495,18 +498,6 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   }
 
   this.updateColor = function() {
-    /*
-    * Pending improvements:
-    * Amount of modulation is linked to a general "variance" slider
-    * Is the toggle "coloring" actually necessary (since there are individual switches per twist-function)?
-    * Hue is twisted by an angle (0-120 degrees) while S, B & A all transfom in the full range 0-100
-    * Should not all color values be 'twisted' by a similar amount?
-    * Maybe instead of an on/off switch, there is simply a slider for 'amount of tweak' (from 0 up to an amount)
-    * Another thing:
-    * Hue is 'circular' - from 360 the next value is 0, there is continuity
-    * How to make S & B 'circular' - maybe from 99 to 100, the next step should be 99 (like a sawtooth wave)
-    */
-
     if (p.fill_STwist) {this.fill_S = map(this.size, 1, 0, 128, 255); this.fillColor = color(this.fill_H, this.fill_S, this.fill_B);} // Modulate fill saturation by radius
     if (p.fill_BTwist) {this.fill_B = map(this.size, 1, 0, 128, 255); this.fillColor = color(this.fill_H, this.fill_S, this.fill_B);} // Modulate fill brightness by radius
     if (p.fill_ATwist) {this.fillAlpha = map(this.size, 1, 0, 0, 255);} // Modulate fill Alpha by radius
