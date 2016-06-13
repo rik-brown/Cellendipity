@@ -533,14 +533,14 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   }
 
   this.checkBoundaryWraparound = function() {
-    if (this.position.x > width + this.r) {
-      this.position.x = -this.r;
-    } else if (this.position.x < -this.r) {
-      this.position.x = width + this.r;
-    } else if (this.position.y > height + this.r) {
-      this.position.y = -this.r;
-    } else if (this.position.y < -this.r) {
-      this.position.y = height + this.r;
+    if (this.position.x > width + this.r*this.flatness) {
+      this.position.x = -this.r*this.flatness;
+    } else if (this.position.x < -this.r*this.flatness) {
+      this.position.x = width + this.r*this.flatness;
+    } else if (this.position.y > height + this.r*this.flatness) {
+      this.position.y = -this.r*this.flatness;
+    } else if (this.position.y < -this.r*this.flatness) {
+      this.position.y = height + this.r*this.flatness;
     }
   }
 
@@ -548,7 +548,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   this.dead = function() {
     if (this.size <= 0) {return true;} // Size = 0 when r = cellEndSize
     if (this.age >= this.lifespan) {return true;} // Death by old age (regardless of size, which may remain constant)
-    if (this.position.x > width + this.r || this.position.x < -this.r || this.position.y > height + this.r || this.position.y < -this.r) {return true;} // Death if move beyond canvas boundary
+    if (this.position.x > width + this.r*this.flatness || this.position.x < -this.r*this.flatness || this.position.y > height + this.r*this.flatness || this.position.y < -this.r*this.flatness) {return true;} // Death if move beyond canvas boundary
     else {return false; }
   };
 
