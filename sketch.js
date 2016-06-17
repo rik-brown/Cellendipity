@@ -66,9 +66,13 @@ function keyTyped() {
   if (key === '1') { // spawn RED
     if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
-    var FillColor = color(0, 255, 255); //RED
-    var StrokeColor = color(0, 0, 255);
-    colony.spawn(pos, vel, FillColor, StrokeColor, p.cellStartSize);
+    p.fillColHSV = { h: 0, s: 1, v: 1 };
+    p.fillColor = color(p.fillColHSV.h, p.fillColHSV.s*255, p.fillColHSV.v*255); // Cell colour
+    //var FillColor = color(0, 255, 255); //RED
+    p.strokeColHSV = { h: 0, s: 1, v: 1 };
+    p.strokeColor = color(p.strokeColHSV.h, p.strokeColHSV.s*255, p.strokeColHSV.v*255); // Cell colour
+    //var StrokeColor = color(0, 0, 255);
+    colony.spawn(pos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
   }
 
   if (key === '2') { // spawn YELLOW
@@ -207,6 +211,7 @@ var initGUI = function () {
     f8.add(p, 'paused').name('Pause').listen();
     f8.add(p, 'autoRestart').name('Auto-restart');
     f8.add(p, 'randomize').name('Randomizer');
+  gui.close();
 }
 
 var Parameters = function () { //These are the initial values, not the randomised ones
