@@ -61,58 +61,75 @@ function screenDump() {
   saveCanvas('myCanvas', 'screendump.png', 'png');
 }
 
-function keyTyped() {
+function updateHSV(fillH, strokeH) {
+  p.fillColHSV = { h: fillH, s: 1, v: 1 };
+  p.fillColor = color(p.fillColHSV.h, p.fillColHSV.s*255, p.fillColHSV.v*255);
+  p.strokeColHSV = { h: strokeH, s: 1, v: 1 };
+  p.strokeColor = color(p.strokeColHSV.h, p.strokeColHSV.s*255, p.strokeColHSV.v*255);
+}
 
+
+function keyTyped() {
   if (key === '1') { // spawn RED
     if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
-    p.fillColHSV = { h: 0, s: 1, v: 1 };
-    p.fillColor = color(p.fillColHSV.h, p.fillColHSV.s*255, p.fillColHSV.v*255); // Cell colour
-    //var FillColor = color(0, 255, 255); //RED
-    p.strokeColHSV = { h: 0, s: 1, v: 1 };
-    p.strokeColor = color(p.strokeColHSV.h, p.strokeColHSV.s*255, p.strokeColHSV.v*255); // Cell colour
-    //var StrokeColor = color(0, 0, 255);
+    updateHSV(0, 0);
     colony.spawn(pos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
   }
 
   if (key === '2') { // spawn YELLOW
     if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
-    var FillColor = color(60, 255, 255); //RED
-    var StrokeColor = color(0, 0, 255);
-    colony.spawn(pos, vel, FillColor, StrokeColor, p.cellStartSize);
+    updateHSV(60, 60);
+    colony.spawn(pos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
   }
 
   if (key === '3') { // spawn GREEN
     if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
-    var FillColor = color(120, 255, 255); //GREEN
-    var StrokeColor = color(0, 0, 255);
-    colony.spawn(pos, vel, FillColor, StrokeColor, p.cellStartSize);
+    updateHSV(120, 120);
+    colony.spawn(pos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
   }
 
   if (key === '4') { // spawn CYAN
     if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
-    var FillColor = color(180, 255, 255); //GREEN
-    var StrokeColor = color(0, 0, 255);
-    colony.spawn(pos, vel, FillColor, StrokeColor, p.cellStartSize);
+    updateHSV(180, 180);
+    colony.spawn(pos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
   }
 
   if (key === '5') { //spawn BLUE
     if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
-    var FillColor = color(240, 255, 255); //BLUE
-    var StrokeColor = color(0, 0, 255);
-    colony.spawn(pos, vel, FillColor, StrokeColor, p.cellStartSize);
+    updateHSV(240, 240);
+    colony.spawn(pos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
   }
 
   if (key === '6') { //spawn VIOLET
     if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D();
-    var FillColor = color(300, 255, 255); //BLUE
-    var StrokeColor = color(0, 0, 255);
-    colony.spawn(pos, vel, FillColor, StrokeColor, p.cellStartSize);
+    updateHSV(300, 300);
+    colony.spawn(pos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
+  }
+
+  if (key === '7') { //spawn WHITE
+    if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
+    var vel = p5.Vector.random2D();
+    p.fillColHSV = { h: 0, s: 0, v: 1 };
+    p.fillColor = color(p.fillColHSV.h, p.fillColHSV.s*255, p.fillColHSV.v*255);
+    p.strokeColHSV = { h: 0, s: 0, v: 1 };
+    p.strokeColor = color(p.strokeColHSV.h, p.strokeColHSV.s*255, p.strokeColHSV.v*255);
+    colony.spawn(pos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
+  }
+
+  if (key === '8') { //spawn BLACK
+    if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
+    var vel = p5.Vector.random2D();
+    p.fillColHSV = { h: 0, s: 0, v: 0 };
+    p.fillColor = color(p.fillColHSV.h, p.fillColHSV.s*255, p.fillColHSV.v*255);
+    p.strokeColHSV = { h: 0, s: 0, v: 0 };
+    p.strokeColor = color(p.strokeColHSV.h, p.strokeColHSV.s*255, p.strokeColHSV.v*255);
+    colony.spawn(pos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
   }
 
   if (key === ' ') { //spacebar respawns with current settings
