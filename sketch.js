@@ -195,6 +195,7 @@ var initGUI = function () {
     f8.add(p, 'autoRestart').name('Auto-restart');
     f8.add(p, 'randomize').name('Randomizer');
   gui.add(p, 'restart').name('Click to respawn');
+  gui.add(p, 'randomRestart').name('Click to randomize');
   gui.close();
 }
 
@@ -245,6 +246,7 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.veils = false;
   this.trails = true;
   this.restart = function () {colony.cells = []; populateColony();};
+  this.randomRestart = function () {randomizer(); colony.cells = []; populateColony();};
   this.debug = false;
 
 }
