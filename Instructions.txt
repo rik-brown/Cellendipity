@@ -1,3 +1,5 @@
+'Tentaculous' by Richard Brown
+
 Keyboard shortcuts
 ==================
 
@@ -23,3 +25,6 @@ C         Toggles between 'centered spawn position' and 'random spawn position'
 N         Toggles between 'show nucleus' and 'don't show nucleus'
 S         Saves a screenshot as .png file
 D         Toggles 'debug mode' on/off
+H         Hides/shows the menu
+
+Github: https://github.com/rik-brown/Aybe_Sea
