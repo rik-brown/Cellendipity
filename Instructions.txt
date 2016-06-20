@@ -1,0 +1,25 @@
+Keyboard shortcuts
+==================
+
+Keys 1-8 select a predefined fill-colour:
+
+1 Red
+2 Yellow
+3 Green
+4 Cyan
+5 Blue
+6 Magenta
+7 White
+8 Black
+
+9 increases fill hue (+2)
+0 decreases fill hue (-2)
+
+
+Spacebar  Respawns with current settings
+R         Respawns after randomizing most of the settings
+P         Pauses/unpauses the main draw-loop (colours can be changed & new cells added while paused)
+C         Toggles between 'centered spawn position' and 'random spawn position'
+N         Toggles between 'show nucleus' and 'don't show nucleus'
+S         Saves a screenshot as .png file
+D         Toggles 'debug mode' on/off
