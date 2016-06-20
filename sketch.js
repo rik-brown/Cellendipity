@@ -1,5 +1,5 @@
 /*
- * Working Title: Tentaculor
+ * Working Title: Tentaculous
  */
 
 var colony; // A colony object
@@ -11,7 +11,7 @@ function setup() {
   ellipseMode(RADIUS);
   p = new Parameters();
   gui = new dat.GUI();
-  gui.remember(p);
+  gui.remember(p); // Comment this out to disable
   initGUI();
   background(p.bkgColor);
   if (p.debug) {frameRate(10);}
@@ -137,7 +137,7 @@ var initGUI = function () {
 		  controller.onChange(function(value) {populateColony(); });
 		var controller = f1.add(p, 'variance', 0, 100).step(1).name('Diversity').listen();
       controller.onChange(function(value) {populateColony(); });
-		var controller = f1.add(p, 'centerSpawn').name('Centered').listen();
+		var controller = f1.add(p, 'centerSpawn').name('Centered [C]').listen();
 		  controller.onChange(function(value) {populateColony(); });
 
 	var f2 = gui.addFolder('Cell Colour');
@@ -183,7 +183,7 @@ var initGUI = function () {
 
 	var f7 = gui.addFolder("Cell Appearance");
     f7.add(p, 'flatness', 0, 100).name('Flatness%').listen();
-    f7.add(p, 'nucleus').name('Nucleus').listen();
+    f7.add(p, 'nucleus').name('Nucleus [N]').listen();
     f7.add(p, 'stepSizeN', 0, 100).name('Step (nucleus)').listen();
     f7.add(p, 'veils').name('Trails (short)');
     f7.add(p, 'trails').name('Trails (long)');
@@ -191,11 +191,12 @@ var initGUI = function () {
   var f8 = gui.addFolder("Options");
     var controller = f8.add(p, 'wraparound').name('Wraparound');
       controller.onChange(function(value) {populateColony();});
-    f8.add(p, 'paused').name('Pause').listen();
+    f8.add(p, 'paused').name('Pause [P]').listen();
     f8.add(p, 'autoRestart').name('Auto-restart');
-    f8.add(p, 'randomize').name('Randomizer');
-  gui.add(p, 'restart').name('Click to respawn');
-  gui.add(p, 'randomRestart').name('Click to randomize');
+    f8.add(p, 'randomize').name('Randomize on restart');
+  gui.add(p, 'restart').name('Respawn [space]');
+  gui.add(p, 'randomRestart').name('Randomize [R]');
+  gui.add(p, 'instructions').name('Instructions');
   gui.close();
 }
 
@@ -247,6 +248,7 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.trails = true;
   this.restart = function () {colony.cells = []; populateColony();};
   this.randomRestart = function () {randomizer(); colony.cells = []; populateColony();};
+  this.instructions = function () {window.open("http://rik-brown.github.io/Aybe_Sea/Instructions.txt")};
   this.debug = false;
 
 }
