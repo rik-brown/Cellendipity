@@ -236,10 +236,13 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     other.spawnCount--;
 
     // Calculate position for spawn based on PVector between cell & other (leaving 'distVect' unchanged, as it is needed later)
-    this.spawnPos = distVect.copy(); // Create spawnPos as a copy of the (already available) distVect which points from parent cell to other
-    this.spawnPos.normalize();
-    this.spawnPos.mult(this.r); // The spawn position is located at parent cell's radius
-    this.spawnPos.add(this.position);
+    // this.spawnPos = distVect.copy(); // Create spawnPos as a copy of the (already available) distVect which points from parent cell to other
+    // this.spawnPos.normalize();
+    // this.spawnPos.mult(this.r); // The spawn position is located at parent cell's radius
+    // this.spawnPos.add(this.position);
+    // 20th June 2016 Changing spawn position to the position of the current 'mother' cell for smoother branching.
+    this.spawnPos = this.position.copy();
+
 
     // Calculate velocity vector for spawn as being centered between parent cell & other
     this.spawnVel = this.velocity.copy(); // Create spawnVel as a copy of parent cell's velocity vector
