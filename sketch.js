@@ -133,39 +133,36 @@ function keyTyped() {
 var initGUI = function () {
 
 	var f1 = gui.addFolder('Colony');
-		var controller = f1.add(p, 'colonySize', 1, 200).step(1).name('Nr. of cells').listen();
+		var controller = f1.add(p, 'colonySize', 1, 200).step(1).name('Size').listen();
 		  controller.onChange(function(value) {populateColony(); });
 		var controller = f1.add(p, 'variance', 0, 100).step(1).name('Diversity').listen();
       controller.onChange(function(value) {populateColony(); });
 		var controller = f1.add(p, 'centerSpawn').name('Centered').listen();
 		  controller.onChange(function(value) {populateColony(); });
-		f1.add(p, 'growing').name('Cells grow');
 
-	var f2 = gui.addFolder('Colour');
+	var f2 = gui.addFolder('Cell Colour');
 	  var controller = f2.addColor(p, 'bkgColHSV').name('Background').listen();
 	    controller.onChange(function(value) {p.bkgColor = color(value.h, value.s*255, value.v*255); background(p.bkgColor);});
 	  var controller = f2.addColor(p, 'fillColHSV').name('Fill').listen();
       controller.onChange(function(value) {p.fillColor = color(value.h, value.s*255, value.v*255);});
-    var controller = f2.add(p, 'fillAlpha', 0, 255).name('Transp.(fill)').listen();
-      controller.onChange(function(value) {populateColony();});
+    f2.add(p, 'fillAlpha', 0, 255).name('Fill Alpha').listen();
     var controller = f2.addColor(p, 'strokeColHSV').name('Line').listen();
 	    controller.onChange(function(value) {p.strokeColor = color(value.h, value.s*255, value.v*255);});
-	  var controller = f2.add(p, 'strokeAlpha', 0, 255).name('Transp.(line)').listen();
-	    controller.onChange(function(value) {populateColony();});
+	  f2.add(p, 'strokeAlpha', 0, 255).name('Line Alpha').listen();
 
-	var f3 = gui.addFolder("Fill Color tweaks");
-	  f3.add(p, 'fill_HTwist').name('Fill Hue').listen();
-    f3.add(p, 'fill_STwist').name('Fill Satur.').listen();
-    f3.add(p, 'fill_BTwist').name('Fill Bright.').listen();
-    f3.add(p, 'fill_ATwist').name('Fill Transp.').listen();
+	var f3 = gui.addFolder("Colour-shifters (fill)");
+	  f3.add(p, 'fill_HTwist').name('Hue').listen();
+    f3.add(p, 'fill_STwist').name('Saturation').listen();
+    f3.add(p, 'fill_BTwist').name('Brightness').listen();
+    f3.add(p, 'fill_ATwist').name('Alpha.').listen();
 
-  var f4 = gui.addFolder("Line Color tweaks");
-  	  f4.add(p, 'stroke_HTwist').name('Line Hue').listen();
-      f4.add(p, 'stroke_STwist').name('Line Satur.').listen();
-      f4.add(p, 'stroke_BTwist').name('Line Bright.').listen();
-      f4.add(p, 'stroke_ATwist').name('Line Transp.').listen();
+  var f4 = gui.addFolder("Colour-shifters (outline)");
+  	  f4.add(p, 'stroke_HTwist').name('Hue').listen();
+      f4.add(p, 'stroke_STwist').name('Saturation').listen();
+      f4.add(p, 'stroke_BTwist').name('Brightness').listen();
+      f4.add(p, 'stroke_ATwist').name('Alpha').listen();
 
-	var f5 = gui.addFolder("Growth");
+	var f5 = gui.addFolder("Cell Size & Growth");
 		var controller = f5.add(p, 'cellStartSize', 10, 200).step(1).name('Size (start)').listen();
 		  controller.onChange(function(value) {populateColony();});
 		var controller = f5.add(p, 'cellEndSize', 0.5, 50).step(0.5).name('Size (end)').listen();
@@ -174,18 +171,20 @@ var initGUI = function () {
 		  controller.onChange(function(value) {populateColony(); });
 		var controller = f5.add(p, 'fertileStart', 0, 100).step(1).name('Fertility%').listen();
 		  controller.onChange(function(value) {populateColony();});
-		f5.add(p, 'spawnLimit', 0, 10).step(1).name('# Spawns');
+		f5.add(p, 'spawnLimit', 0, 10).step(1).name('#Children');
+    f5.add(p, 'growing').name('Cells grow');
 
-	var f6 = gui.addFolder("Movement");
+	var f6 = gui.addFolder("Cell Movement");
     f6.add(p, 'noisePercent', 0, 100).step(1).name('Noise%').listen();
-	  f6.add(p, 'spiral', 0, 3).name('Screw').listen();
+	  f6.add(p, 'spiral', 0, 3).name('Spirals').listen();
 	  var controller =f6.add(p, 'stepSize', 0, 100).name('Step (cell)').listen();
 	   controller.onChange(function(value) {if (p.stepSize==0) {p.stepped=false} else {p.stepped=true};});
-	  f6.add(p, 'stepSizeN', 0, 100).name('Step (nucleus)').listen();
 
-	var f7 = gui.addFolder("Appearance");
-    f7.add(p, 'flatness', 0, 100).name('Flatness').listen();
+
+	var f7 = gui.addFolder("Cell Appearance");
+    f7.add(p, 'flatness', 0, 100).name('Flatness%').listen();
     f7.add(p, 'nucleus').name('Nucleus').listen();
+    f7.add(p, 'stepSizeN', 0, 100).name('Step (nucleus)').listen();
     f7.add(p, 'veils').name('Trails (short)');
     f7.add(p, 'trails').name('Trails (long)');
 
@@ -195,6 +194,7 @@ var initGUI = function () {
     f8.add(p, 'paused').name('Pause').listen();
     f8.add(p, 'autoRestart').name('Auto-restart');
     f8.add(p, 'randomize').name('Randomizer');
+  gui.add(p, 'restart').name('Click to respawn');
   gui.close();
 }
 
@@ -244,8 +244,9 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.growing = true;
   this.veils = false;
   this.trails = true;
-
+  this.restart = function () {colony.cells = []; populateColony();};
   this.debug = false;
+
 }
 
 this.randomizer = function() {
