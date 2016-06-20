@@ -48,13 +48,13 @@ function veil() {
 function mousePressed() {
   var mousePos = createVector(mouseX, mouseY);
   var vel = p5.Vector.random2D();
-  if (mousePos.x < (width-260)) {colony.spawn(mousePos, vel, p.fillColor, p.strokeColor, p.cellStartSize);}
+  if (mousePos.x < (width-270)) {colony.spawn(mousePos, vel, p.fillColor, p.strokeColor, p.cellStartSize);}
 }
 
 function mouseDragged() {
   var mousePos = createVector(mouseX, mouseY);
   var vel = p5.Vector.random2D();
-  if (mousePos.x < (width-260)) {colony.spawn(mousePos, vel, p.fillColor, p.strokeColor, p.cellStartSize);}
+  if (mousePos.x < (width-270)) {colony.spawn(mousePos, vel, p.fillColor, p.strokeColor, p.cellStartSize);}
 }
 
 function screenDump() {
@@ -70,66 +70,33 @@ function updateHSV(fillH, strokeH) {
 
 
 function keyTyped() {
-  if (key === '1') { // spawn RED
-    if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
-    var vel = p5.Vector.random2D();
-    updateHSV(0, 0);
-    colony.spawn(pos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
+  if (key === '1') {updateHSV(0, 0); } // fillColor = RED
+  if (key === '2') {updateHSV(60, 60); } // fillColor = YELLOW
+  if (key === '3') {updateHSV(120, 120); } // fillColor = GREEN
+  if (key === '4') {updateHSV(180, 180); } // fillColor = CYAN
+  if (key === '5') {updateHSV(240, 240); } // fillColor = BLUE
+  if (key === '6') {updateHSV(300, 300); } // fillColor = VIOLET
+  if (key === '7') { // fillColor = WHITE
+      p.fillColHSV = { h: 0, s: 0, v: 1 };
+      p.fillColor = color(p.fillColHSV.h, p.fillColHSV.s*255, p.fillColHSV.v*255);
+      p.strokeColHSV = { h: 0, s: 0, v: 1 };
+      p.strokeColor = color(p.strokeColHSV.h, p.strokeColHSV.s*255, p.strokeColHSV.v*255);
   }
-
-  if (key === '2') { // spawn YELLOW
-    if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
-    var vel = p5.Vector.random2D();
-    updateHSV(60, 60);
-    colony.spawn(pos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
-  }
-
-  if (key === '3') { // spawn GREEN
-    if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
-    var vel = p5.Vector.random2D();
-    updateHSV(120, 120);
-    colony.spawn(pos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
-  }
-
-  if (key === '4') { // spawn CYAN
-    if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
-    var vel = p5.Vector.random2D();
-    updateHSV(180, 180);
-    colony.spawn(pos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
-  }
-
-  if (key === '5') { //spawn BLUE
-    if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
-    var vel = p5.Vector.random2D();
-    updateHSV(240, 240);
-    colony.spawn(pos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
-  }
-
-  if (key === '6') { //spawn VIOLET
-    if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
-    var vel = p5.Vector.random2D();
-    updateHSV(300, 300);
-    colony.spawn(pos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
-  }
-
-  if (key === '7') { //spawn WHITE
-    if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
-    var vel = p5.Vector.random2D();
-    p.fillColHSV = { h: 0, s: 0, v: 1 };
-    p.fillColor = color(p.fillColHSV.h, p.fillColHSV.s*255, p.fillColHSV.v*255);
-    p.strokeColHSV = { h: 0, s: 0, v: 1 };
-    p.strokeColor = color(p.strokeColHSV.h, p.strokeColHSV.s*255, p.strokeColHSV.v*255);
-    colony.spawn(pos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
-  }
-
-  if (key === '8') { //spawn BLACK
-    if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
-    var vel = p5.Vector.random2D();
+  if (key === '8') { // fillColor = BLACK
     p.fillColHSV = { h: 0, s: 0, v: 0 };
     p.fillColor = color(p.fillColHSV.h, p.fillColHSV.s*255, p.fillColHSV.v*255);
     p.strokeColHSV = { h: 0, s: 0, v: 0 };
     p.strokeColor = color(p.strokeColHSV.h, p.strokeColHSV.s*255, p.strokeColHSV.v*255);
-    colony.spawn(pos, vel, p.fillColor, p.strokeColor, p.cellStartSize);
+  }
+  if (key === '9') { // fillColor increase Hue
+    p.fillColHSV.h += 2; //
+    if (p.fillColHSV.h > 360) {p.fillColHSV.h = 0;}
+    p.fillColor = color(p.fillColHSV.h, p.fillColHSV.s*255, p.fillColHSV.v*255);
+  }
+  if (key === '0') { // fillColor decrease Hue
+    p.fillColHSV.h -= 2; //
+    if (p.fillColHSV.h < 0) {p.fillColHSV.h = 360;}
+    p.fillColor = color(p.fillColHSV.h, p.fillColHSV.s*255, p.fillColHSV.v*255);
   }
 
   if (key === ' ') { //spacebar respawns with current settings
@@ -178,11 +145,11 @@ var initGUI = function () {
 	  var controller = f2.addColor(p, 'bkgColHSV').name('Background').listen();
 	    controller.onChange(function(value) {p.bkgColor = color(value.h, value.s*255, value.v*255); background(p.bkgColor);});
 	  var controller = f2.addColor(p, 'fillColHSV').name('Fill').listen();
-      controller.onChange(function(value) {p.fillColor = color(value.h, value.s*255, value.v*255); populateColony();});
-	  var controller = f2.addColor(p, 'strokeColHSV').name('Line').listen();
-	    controller.onChange(function(value) {p.strokeColor = color(value.h, value.s*255, value.v*255); populateColony();});
-	  var controller = f2.add(p, 'fillAlpha', 0, 255).name('Transp.(fill)').listen();
+      controller.onChange(function(value) {p.fillColor = color(value.h, value.s*255, value.v*255);});
+    var controller = f2.add(p, 'fillAlpha', 0, 255).name('Transp.(fill)').listen();
       controller.onChange(function(value) {populateColony();});
+    var controller = f2.addColor(p, 'strokeColHSV').name('Line').listen();
+	    controller.onChange(function(value) {p.strokeColor = color(value.h, value.s*255, value.v*255);});
 	  var controller = f2.add(p, 'strokeAlpha', 0, 255).name('Transp.(line)').listen();
 	    controller.onChange(function(value) {populateColony();});
 
@@ -207,7 +174,7 @@ var initGUI = function () {
 		  controller.onChange(function(value) {populateColony(); });
 		var controller = f5.add(p, 'fertileStart', 0, 100).step(1).name('Fertility%').listen();
 		  controller.onChange(function(value) {populateColony();});
-		f5.add(p, 'spawnLimit').step(1).name('# Spawns');
+		f5.add(p, 'spawnLimit', 0, 10).step(1).name('# Spawns');
 
 	var f6 = gui.addFolder("Movement");
     f6.add(p, 'noisePercent', 0, 100).step(1).name('Noise%').listen();
