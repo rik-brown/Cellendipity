@@ -35,7 +35,6 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   this.cellStartSize = lerp(cellStartSize_, (cellStartSize_ * map(this.dna.genes[1], 0, 1, 0.8, 1.0)), p.variance*0.01); // Note: If last value in map() is >1 then new cells may be larger than their parents
   this.cellEndSize = lerp(p.cellEndSize, (p.cellEndSize * map(this.dna.genes[2], 0, 1, 1.0, 2.0)), p.variance*0.01);
   this.r = this.cellStartSize; // Initial value for radius
-  this.size = map(this.r, this.cellStartSize, this.cellEndSize, 1, 0);
   this.flatness = lerp(p.flatness*0.01, (p.flatness*0.01 * map(this.dna.genes[13], 0, 1, 0.8, 1.2)), p.variance*0.01) +1; // To make circles into ellipses
   this.growth = (this.cellStartSize-this.cellEndSize)/p.lifespan; // Should work for both large>small and small>large
   this.drawStep = 1;
@@ -109,7 +108,6 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   this.updateSize = function() { //Alternatively: cell is always growing, so include this in 'living' but allow for growth=0 ??
     this.r -= this.growth; // Cell can only shrink for now
-    this.size = map(this.r, this.cellStartSize, this.cellEndSize, 1, 0);
   }
 
   this.updateFertility = function() {
@@ -118,19 +116,19 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   }
 
   this.updateColor = function() {
-    if (p.fill_STwist) {this.fill_S = map(this.size, 1, 0, 128, 255); this.fillColor = color(this.fill_H, this.fill_S, this.fill_B);} // Modulate fill saturation by radius
-    if (p.fill_BTwist) {this.fill_B = map(this.size, 1, 0, 128, 255); this.fillColor = color(this.fill_H, this.fill_S, this.fill_B);} // Modulate fill brightness by radius
-    if (p.fill_ATwist) {this.fillAlpha = map(this.size, 1, 0, 0, 255);} // Modulate fill Alpha by radius
+    if (p.fill_STwist) {this.fill_S = map(this.maturity, 1, 0, 128, 255); this.fillColor = color(this.fill_H, this.fill_S, this.fill_B);} // Modulate fill saturation by radius
+    if (p.fill_BTwist) {this.fill_B = map(this.maturity, 1, 0, 128, 255); this.fillColor = color(this.fill_H, this.fill_S, this.fill_B);} // Modulate fill brightness by radius
+    if (p.fill_ATwist) {this.fillAlpha = map(this.maturity, 1, 0, 0, 255);} // Modulate fill Alpha by radius
     if (p.fill_HTwist) { // Modulate fill hue by radius. Does not change original hue value but replaces it with a 'twisted' version
-      this.fill_Htwisted = map(this.size, 1, 0, this.fill_H, this.fill_H+60);
+      this.fill_Htwisted = map(this.maturity, 1, 0, this.fill_H, this.fill_H+60);
       if (this.fill_Htwisted > 360) {this.fill_Htwisted -= 360;}
       this.fillColor = color(this.fill_Htwisted, this.fill_S, this.fill_B); //fill colour is updated with new hue value
     }
-    if (p.stroke_STwist) {this.stroke_S = map(this.size, 1, 0, 128, 255); this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B);} // Modulate stroke saturation by radius
-    if (p.stroke_BTwist) {this.stroke_B = map(this.size, 1, 0, 128, 255); this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B);} // Modulate stroke brightness by radius
-    if (p.stroke_ATwist) {this.strokeAlpha = map(this.size, 1, 0, 0, 255);} // Modulate stroke Alpha by radius
+    if (p.stroke_STwist) {this.stroke_S = map(this.maturity, 1, 0, 128, 255); this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B);} // Modulate stroke saturation by radius
+    if (p.stroke_BTwist) {this.stroke_B = map(this.maturity, 1, 0, 128, 255); this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B);} // Modulate stroke brightness by radius
+    if (p.stroke_ATwist) {this.strokeAlpha = map(this.maturity, 1, 0, 0, 255);} // Modulate stroke Alpha by radius
     if (p.stroke_HTwist) { // Modulate stroke hue by radius
-      this.stroke_Htwisted = map(this.size, 1, 0, this.stroke_H, this.stroke_H+60);
+      this.stroke_Htwisted = map(this.maturity, 1, 0, this.stroke_H, this.stroke_H+60);
       if (this.stroke_Htwisted > 360) {this.stroke_Htwisted -= 360;}
       this.strokeColor = color(this.stroke_Htwisted, this.stroke_S, this.stroke_B); //stroke colour is updated with new hue value
     }
@@ -166,7 +164,6 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   // Death
   this.dead = function() {
-    if (this.size <= 0) {return true;} // Size = 0 when r = cellEndSize
     if (this.age >= this.lifespan) {return true;} // Death by old age (regardless of size, which may remain constant)
     if (this.position.x > width + this.r*this.flatness || this.position.x < -this.r*this.flatness || this.position.y > height + this.r*this.flatness || this.position.y < -this.r*this.flatness) {return true;} // Death if move beyond canvas boundary
     else {return false; }
@@ -284,7 +281,6 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     //text("this.strokeAlpha:" + this.strokeAlpha, this.position.x, this.position.y + rowHeight*5);
 
     // GROWTH
-    //text("size:" + this.size, this.position.x, this.position.y + rowHeight*0);
     //text("growth:" + this.growth, this.position.x, this.position.y + rowHeight*5);
     text("maturity:" + this.maturity, this.position.x, this.position.y + rowHeight*1);
     text("lifespan:" + this.lifespan, this.position.x, this.position.y + rowHeight*0);
