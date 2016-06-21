@@ -140,7 +140,7 @@ var initGUI = function () {
 		var controller = f1.add(p, 'centerSpawn').name('Centered [C]').listen();
 		  controller.onChange(function(value) {populateColony(); });
 
-	var f2 = gui.addFolder('Cell Colour');
+	var f2 = gui.addFolder('Colour');
 	  var controller = f2.addColor(p, 'bkgColHSV').name('Background').listen();
 	    controller.onChange(function(value) {p.bkgColor = color(value.h, value.s*255, value.v*255); background(p.bkgColor);});
 	  var controller = f2.addColor(p, 'fillColHSV').name('Fill').listen();
@@ -152,20 +152,20 @@ var initGUI = function () {
 
 	var f3 = gui.addFolder("Colour-shifters (fill)");
 	  f3.add(p, 'fill_HTwist').name('Hue').listen();
-    f3.add(p, 'fill_STwist').name('Saturation').listen();
-    f3.add(p, 'fill_BTwist').name('Brightness').listen();
-    f3.add(p, 'fill_ATwist').name('Alpha.').listen();
+    f3.add(p, 'fill_STwist', 0, 255).name('Saturation').listen();
+    f3.add(p, 'fill_BTwist', 0, 255).name('Brightness').listen();
+    f3.add(p, 'fill_ATwist', 0, 255).name('Alpha.').listen();
 
   var f4 = gui.addFolder("Colour-shifters (outline)");
   	  f4.add(p, 'stroke_HTwist').name('Hue').listen();
-      f4.add(p, 'stroke_STwist').name('Saturation').listen();
-      f4.add(p, 'stroke_BTwist').name('Brightness').listen();
-      f4.add(p, 'stroke_ATwist').name('Alpha').listen();
+      f4.add(p, 'stroke_STwist', 0, 255).name('Saturation').listen();
+      f4.add(p, 'stroke_BTwist', 0, 255).name('Brightness').listen();
+      f4.add(p, 'stroke_ATwist', 0, 255).name('Alpha').listen();
 
 	var f5 = gui.addFolder("Cell Size & Growth");
-		var controller = f5.add(p, 'cellStartSize', 10, 200).step(1).name('Size (start)').listen();
+		var controller = f5.add(p, 'cellStartSize', 0, 200).step(1).name('Size (start)').listen();
 		  controller.onChange(function(value) {populateColony();});
-		var controller = f5.add(p, 'cellEndSize', 0.5, 50).step(0.5).name('Size (end)').listen();
+		var controller = f5.add(p, 'cellEndSize', 0, 50).step(0.5).name('Size (end)').listen();
 		  controller.onChange(function(value) {populateColony(); });
 		var controller = f5.add(p, 'lifespan', 100, 5000).step(10).name('Lifespan').listen();
 		  controller.onChange(function(value) {populateColony(); });
@@ -220,13 +220,13 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.variance = random(100); // Degree of influence from modulators & tweakers (from 0-1 or 0-100%)
 
   if (random(1) > 0.8) {this.fill_HTwist = true;} else {this.fill_HTwist = false;}
-  if (random(1) > 0.7) {this.fill_STwist = true;} else {this.fill_STwist = false;}
-  if (random(1) > 0.8) {this.fill_BTwist = true;} else {this.fill_BTwist = false;}
-  if (random(1) > 0.9) {this.fill_ATwist = true;} else {this.fill_ATwist = false;}
+  if (random(1) > 0.7) {this.fill_STwist = floor(random (1,255));} else {this.fill_STwist = 0;}
+  if (random(1) > 0.8) {this.fill_BTwist = floor(random (1,255));} else {this.fill_BTwist = 0;}
+  if (random(1) > 0.9) {this.fill_ATwist = floor(random (1,255));} else {this.fill_ATwist = 0;}
   if (random(1) > 0.8) {this.stroke_HTwist = true;} else {this.stroke_HTwist = false;}
-  if (random(1) > 0.7) {this.stroke_STwist = true;} else {this.stroke_STwist = false;}
-  if (random(1) > 0.8) {this.stroke_BTwist = true;} else {this.stroke_BTwist = false;}
-  if (random(1) > 0.9) {this.stroke_ATwist = true;} else {this.stroke_ATwist = false;}
+  if (random(1) > 0.7) {this.stroke_STwist = floor(random (1,255));} else {this.stroke_STwist = 0;}
+  if (random(1) > 0.8) {this.stroke_BTwist = floor(random (1,255));} else {this.stroke_BTwist = 0;}
+  if (random(1) > 0.9) {this.stroke_ATwist = floor(random (1,255));} else {this.stroke_ATwist = 0;}
 
   this.cellStartSize = random(30,100); // Cell radius at spawn
   this.cellEndSize = random(0, 10);
