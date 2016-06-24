@@ -1,5 +1,8 @@
 /*
- * Working Title: Tentaculous
+ * Cellendipity
+ * by Richard Brown
+ * Version 1.0 24th June 2016
+ * cellendipity@gmail.com
  */
 
 var colony; // A colony object
@@ -11,7 +14,7 @@ function setup() {
   ellipseMode(RADIUS);
   p = new Parameters();
   gui = new dat.GUI();
-  gui.remember(p); // Comment this out to disable
+  gui.remember(p); // Comment this out to disable saving presets
   initGUI();
   background(p.bkgColor);
   if (p.debug) {frameRate(10);}
@@ -20,25 +23,23 @@ function setup() {
 
 function draw() {
   if (!p.trails || p.debug) {background(p.bkgColor);}
-  if (p.veils) {veil();} // Draws a near-transparent 'veil' in background colour over the frame
+  if (p.veils) {veil();}
   if (!p.paused) {colony.run();}
   if (p.paused && mouseIsPressed) {colony.run();}
   if (p.paused && keyIsPressed) {colony.run();}
-  if (colony.cells.length === 0) { if (keyIsPressed || p.autoRestart) {populateColony(); } }
+  if (colony.cells.length === 0) { if (keyIsPressed || p.autoRestart) {populateColony(); } } // Repopulate the colony when all the cells have died
 }
 
 function populateColony() {
   background(p.bkgColor); // Refresh the background
   colony.cells = [];
   if (p.randomize) {randomizer();}
-  colony = new Colony(p.colonySize, p.cellStartSize); //Could Colony receive a color-seed value (that is iterated through in a for- loop?) (or randomized?)
+  colony = new Colony(p.colonySize, p.cellStartSize);
 }
 
-function veil() {
-  var transparency = 1; // 255 is fully opaque, 1 is virtually invisible
+function veil() { // Neat trick to create smooth, long trails
   blendMode(DIFFERENCE);
   noStroke();
-  //fill(hue(p.bkgColor), saturation(p.bkgColor), brightness(p.bkgColor), transparency);
   fill(1);
   rect(-1, -1, width + 1, height + 1);
   blendMode(BLEND);
@@ -70,8 +71,8 @@ function updateHSV(fillH, strokeH) {
 
 
 function keyTyped() {
-  if (key === '1') {updateHSV(0, 0); } // fillColor = RED
-  if (key === '2') {updateHSV(60, 60); } // fillColor = YELLOW
+  if (key === '1') {updateHSV(  0,   0); } // fillColor = RED
+  if (key === '2') {updateHSV( 60,  60); } // fillColor = YELLOW
   if (key === '3') {updateHSV(120, 120); } // fillColor = GREEN
   if (key === '4') {updateHSV(180, 180); } // fillColor = CYAN
   if (key === '5') {updateHSV(240, 240); } // fillColor = BLUE
@@ -143,26 +144,26 @@ var initGUI = function () {
 	var f2 = gui.addFolder('Colour');
 	  var controller = f2.addColor(p, 'bkgColHSV').name('Background').listen();
 	    controller.onChange(function(value) {p.bkgColor = color(value.h, value.s*255, value.v*255); background(p.bkgColor);});
-	  var controller = f2.addColor(p, 'fillColHSV').name('Fill').listen();
+	  var controller = f2.addColor(p, 'fillColHSV').name('Cell').listen();
       controller.onChange(function(value) {p.fillColor = color(value.h, value.s*255, value.v*255);});
-    f2.add(p, 'fillAlpha', 0, 255).name('Fill Alpha').listen();
-    var controller = f2.addColor(p, 'strokeColHSV').name('Line').listen();
+    f2.add(p, 'fillAlpha', 0, 255).name('Transparency').listen();
+    var controller = f2.addColor(p, 'strokeColHSV').name('Membrane').listen();
 	    controller.onChange(function(value) {p.strokeColor = color(value.h, value.s*255, value.v*255);});
-	  f2.add(p, 'strokeAlpha', 0, 255).name('Line Alpha').listen();
+	  f2.add(p, 'strokeAlpha', 0, 255).name('Transparency').listen();
 
-	var f3 = gui.addFolder("Colour-shifters (fill)");
+	var f3 = gui.addFolder("Cell Tweaks");
 	  f3.add(p, 'fill_HTwist', 0, 360).step(1).name('Hue').listen();
     f3.add(p, 'fill_STwist', 0, 255).name('Saturation').listen();
     f3.add(p, 'fill_BTwist', 0, 255).name('Brightness').listen();
     f3.add(p, 'fill_ATwist', 0, 255).name('Alpha.').listen();
 
-  var f4 = gui.addFolder("Colour-shifters (outline)");
+  var f4 = gui.addFolder("Membrane Tweaks");
   	  f4.add(p, 'stroke_HTwist', 0, 360).step(1).name('Hue').listen();
       f4.add(p, 'stroke_STwist', 0, 255).name('Saturation').listen();
       f4.add(p, 'stroke_BTwist', 0, 255).name('Brightness').listen();
       f4.add(p, 'stroke_ATwist', 0, 255).name('Alpha').listen();
 
-	var f5 = gui.addFolder("Cell Size & Growth");
+	var f5 = gui.addFolder("Growth");
 		var controller = f5.add(p, 'cellStartSize', 0, 200).step(1).name('Size (start)').listen();
 		  controller.onChange(function(value) {populateColony();});
 		var controller = f5.add(p, 'cellEndSize', 0, 50).step(0.5).name('Size (end)').listen();
@@ -174,14 +175,14 @@ var initGUI = function () {
 		f5.add(p, 'spawnLimit', 0, 10).step(1).name('#Children');
     f5.add(p, 'growing').name('Cells grow');
 
-	var f6 = gui.addFolder("Cell Movement");
+	var f6 = gui.addFolder("Movement");
     f6.add(p, 'noisePercent', 0, 100).step(1).name('Noise%').listen();
 	  f6.add(p, 'spiral', 0, 3).name('Spirals').listen();
 	  var controller =f6.add(p, 'stepSize', 0, 100).name('Step (cell)').listen();
 	   controller.onChange(function(value) {if (p.stepSize==0) {p.stepped=false} else {p.stepped=true};});
 
 
-	var f7 = gui.addFolder("Cell Appearance");
+	var f7 = gui.addFolder("Appearance");
     f7.add(p, 'flatness', 0, 100).name('Flatness%').listen();
     f7.add(p, 'nucleus').name('Nucleus [N]').listen();
     f7.add(p, 'stepSizeN', 0, 100).name('Step (nucleus)').listen();
@@ -194,6 +195,7 @@ var initGUI = function () {
     f8.add(p, 'paused').name('Pause [P]').listen();
     f8.add(p, 'autoRestart').name('Auto-restart');
     f8.add(p, 'randomize').name('Randomize on restart');
+
   gui.add(p, 'restart').name('Respawn [space]');
   gui.add(p, 'randomRestart').name('Randomize [R]');
   gui.add(p, 'instructions').name('Instructions');
@@ -202,7 +204,6 @@ var initGUI = function () {
 
 var Parameters = function () { //These are the initial values, not the randomised ones
   this.colonySize = int(random (3,50)); // Max number of cells in the colony
-  //this.colonySize = 1; // Max number of cells in the colony
   this.centerSpawn = false; // true=initial spawn is width/2, height/2 false=random
   this.autoRestart = false; // If true, will not wait for keypress before starting anew
   this.paused = false; // If true, draw will not advance unless mouseIsPressed
@@ -241,7 +242,7 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.stepSize = 0;
   this.stepSizeN = 10;
   this.stepped = false;
-  this.wraparound = true;
+  this.wraparound = false;
 
   this.growing = true;
   this.veils = false;
@@ -253,7 +254,7 @@ var Parameters = function () { //These are the initial values, not the randomise
 
 }
 
-this.randomizer = function() {
+this.randomizer = function() { // Parameters are randomized (more than in the initial configuration)
   p.colonySize = int(random (2,30));
   if (random(1) > 0.4) {p.centerSpawn = true;} else {p.centerSpawn = false;}
 

@@ -5,7 +5,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   this.dna = dna_;
 
-  // DNA gene mapping (14 genes)
+  // DNA gene mapping (15 genes)
   // 0 = cellStartSize
   // 1 = cellEndSize
   // 2 = lifespan
@@ -26,7 +26,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   this.fertile = false; // A new cell always starts of infertile
 
   // GROWTH & REPRODUCTION
-  this.age = 0; // Age is 'number of frames since birth'. A new cell always starts with age = 0. What is it used for?
+  this.age = 0; // Age is 'number of frames since birth'. A new cell always starts with age = 0. From age comes maturity
   this.lifespan = lerp(p.lifespan, (p.lifespan * map(this.dna.genes[2], 0, 1, 0.8, 1.2)), p.variance*0.01); // Lifespan can be lowered by DNA but not increased
   this.fertility = lerp(p.fertileStart*0.01, (p.fertileStart*0.01 * map(this.dna.genes[14], 0, 1, 0.7, 1.0)), p.variance*0.01); // Fertility can be lowered by DNA but not increased
   this.spawnCount = int(p.spawnLimit); // Max. number of spawns
@@ -66,9 +66,6 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
   this.strokeColor = color(this.stroke_H, this.stroke_S, this.stroke_B); // Initial color is set
   this.strokeAlpha = lerp(p.strokeAlpha, (p.strokeAlpha * map(this.dna.genes[12], 0, 1, 0.9, 1.1)), p.variance*0.01);
 
-  // Variables for LINEAR MOVEMENT WITH COLLISIONS
-  this.m = this.r * 0.1; // Mass (sort of)
-
   this.run = function() {
     this.live();
     this.updatePosition();
@@ -84,8 +81,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     this.age += 1;
     this.maturity = map(this.age, 0, this.lifespan, 1, 0);
     this.drawStep--;
-    //this.drawStepStart = (this.r *2 + this.growth) * p.stepSize*0.01;
-	this.drawStepStart = map(p.stepSize, 0, 100, 0 , (this.r *2 + this.growth));
+    this.drawStepStart = map(p.stepSize, 0, 100, 0 , (this.r *2 + this.growth));
     if (this.drawStep < 0) {this.drawStep = this.drawStepStart;}
     this.drawStepN--;
     this.drawStepNStart = map(p.stepSizeN, 0, 100, 0 , this.r *2);
@@ -106,8 +102,8 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     this.position.add(this.velocity);
   }
 
-  this.updateSize = function() { //Alternatively: cell is always growing, so include this in 'living' but allow for growth=0 ??
-    this.r -= this.growth; // Cell can only shrink for now
+  this.updateSize = function() {
+    this.r -= this.growth;
   }
 
   this.updateFertility = function() {
@@ -134,23 +130,7 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     }
   }
 
-  this.checkBoundaryRebound = function() { //This function is no longer called. If not missed, remove
-    if (this.position.x > width - this.r) {
-      this.position.x = width - this.r;
-      this.velocity.x *= -1;
-    } else if (this.position.x < this.r) {
-      this.position.x = this.r;
-      this.velocity.x *= -1;
-    } else if (this.position.y > height - this.r) {
-      this.position.y = height - this.r;
-      this.velocity.y *= -1;
-    } else if (this.position.y < this.r) {
-      this.position.y = this.r;
-      this.velocity.y *= -1;
-    }
-  }
-
-  this.checkBoundaryWraparound = function() {
+    this.checkBoundaryWraparound = function() {
     if (this.position.x > width + this.r*this.flatness) {
       this.position.x = -this.r*this.flatness;
     } else if (this.position.x < -this.r*this.flatness) {
@@ -164,26 +144,10 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
 
   // Death
   this.dead = function() {
-    if (this.cellEndSize < this.cellStartSize && this.r <= this.cellEndSize) {return true;} // Death by size
+    if (this.cellEndSize < this.cellStartSize && this.r <= this.cellEndSize) {return true;} // Death by size (only when cell is shrinking)
     if (this.age >= this.lifespan) {return true;} // Death by old age (regardless of size, which may remain constant)
     if (this.position.x > width + this.r*this.flatness || this.position.x < -this.r*this.flatness || this.position.y > height + this.r*this.flatness || this.position.y < -this.r*this.flatness) {return true;} // Death if move beyond canvas boundary
     else {return false; }
-  };
-
-  // Copied from the original Evolution EcoSystem sketch
-  // NOT IN USE
-  // Called from 'run' in colony to determine if a cell will spontaneously (& asexually) reproduce
-  // Note: instead of void, the method returns a 'Cell' object
-  this.reproduce = function() {
-    if (random(1) < 0.003) {
-      // Child DNA is exact copy of single parent
-      var childDNA = this.dna.copy();
-      // DNA can mutate if a random number is less than 0.01
-      childDNA.geneMutate(0.01);
-      return new Cell(this.position, this.velocity, this.fill_Colour, childDNA, this.cellStartSize); // this is a pretty cool trick!
-    } else {
-      return null; // If no child was spawned
-    }
   };
 
   this.display = function() {
@@ -225,8 +189,6 @@ function Cell(pos, vel, fillColor_, strokeColor_, dna_, cellStartSize_) {
     var distMag = distVect.mag(); // calculate magnitude of the vector separating the balls
     if (distMag < (this.r + other.r)) {this.conception(other, distVect);} // Spawn a new cell
   }
-
-
 
   this.conception = function(other, distVect) {
     // Decrease spawn counters.

@@ -1,17 +1,15 @@
 // Colony class
 
-// CONSTRUCTOR: Create a 'Colony' object, initially populated with 'num' cells
-function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the number of Cells in initial spawn
+// CONSTRUCTOR: Create a 'Colony' object, initially populated with 'colonySize' cells
+function Colony(colonySize, cellStartSize_) {
   // Start with an array for all cells
   this.cells = [];
 
   // VARIABLES
-
-  var colonyMaxSize = 500;
-  var colRand = random(-PI, PI);
+  var colonyMaxSize = 500; // This could be varied in the GUI but 500 seems to be an OK value
 
   // Create initial population of cells
-  for (var i = 0; i < num; i++) {
+  for (var i = 0; i < colonySize; i++) {
     if (p.centerSpawn) {var pos = createVector(width/2, height/2);} else {var pos = createVector(random(width), random(height));}
     var vel = p5.Vector.random2D(); // Initial velocity vector is random
     var dna = new DNA(); // Get new DNA
@@ -30,7 +28,6 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
 
   // Run the colony
   this.run = function() {
-
     if (p.debug) {this.colonyDebugger(); }
 
     // Iterate backwards through the ArrayList because we are removing items
@@ -51,7 +48,7 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
       }
     }
 
-    // If there are too many cells, remove some by 'culling' (not actually active now, functional code is commented out)
+    // If there are too many cells, remove some by 'culling'
     if (this.cells.length > colonyMaxSize) {
       this.cull(colonyMaxSize);
     }
@@ -60,9 +57,6 @@ function Colony(num, cellStartSize_) { // Imports 'num' from Setup in main, the 
   this.cull = function(div) { // To remove a proportion of the cells from (the oldest part of) the colony
     var cull = (this.cells.length / div);
     for (var i = cull; i >= 0; i--) { this.cells.splice(i,1); }
-    //background(0);                    // Use this to clear the background on cull
-    //fill(255, 1);                     // Use this to veil the background on cull
-    //rect(-1, -1, width+1, height+1);
   };
 
   this.colonyDebugger = function() { // Displays some values as text at the top left corner (for debug only)
