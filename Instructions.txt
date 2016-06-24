@@ -1,4 +1,4 @@
-'Tentaculous' by Richard Brown
+'Cellendipity' v1.0 by Richard Brown
 
 Keyboard shortcuts
 ==================
@@ -27,7 +27,7 @@ S         Saves a screenshot as .png file
 D         Toggles 'debug mode' on/off
 H         Hides/shows the menu
 
-Tip: You can save your favourite configurations in the menu, but first you need to click on the 'settings' icon at the top, 
+Tip: You can save your favourite configurations in the menu, but first you need to click on the 'settings' icon at the top,
 then select "Automatically save values to localStorage on exit."
 
 Github: https://github.com/rik-brown/Aybe_Sea
