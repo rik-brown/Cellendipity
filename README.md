@@ -1,4 +1,4 @@
-# Aybe_Sea
+# Cellendipity
 My first project on Github.
 My first project in p5.js, a port of my first 'proper' project in Processing.
 Started 19th Jan 2016.
@@ -22,6 +22,5 @@ The first sketch which satisfied my original 'brief' is dated 6th March 2016. Al
 
 I am currently trying to finalise this project, which is mainly about bugfixing and adding all the known 'tweakers' to the GUI (without succumbing to the temptation to find some new ones).
 
-'Aybe Sea' is one of many working titles. It's a track from the Mothers of Invention album 'Burnt Weeny Sandwich'
 
 
