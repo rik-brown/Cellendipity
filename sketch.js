@@ -58,7 +58,7 @@ function mouseDragged() {
 }
 
 function screenDump() {
-  saveCanvas('myCanvas', 'screendump.png', 'png');
+  saveCanvas('screendump.png', 'png');
 }
 
 function updateHSV(fillH, strokeH) {
