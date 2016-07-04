@@ -218,7 +218,7 @@ var Parameters = function () { //These are the initial values, not the randomise
   this.strokeColor = color(this.strokeColHSV.h, this.strokeColHSV.s*255, this.strokeColHSV.v*255); // Cell colour
   this.strokeAlpha = random(255);
 
-  this.variance = random(100); // Degree of influence from modulators & tweakers (from 0-1 or 0-100%)
+  this.variance = random(100); // Degree of influence from randomizing contribution from DNA
 
   if (random(1) > 0.8) {this.fill_HTwist = floor(random(1, 360));} else {this.fill_HTwist = 0;}
   if (random(1) > 0.7) {this.fill_STwist = floor(random (1,255));} else {this.fill_STwist = 0;}
